@@ -40,38 +40,43 @@ async function main() {
     },
   });
 
-  await prisma.service.createMany({
-    data: [
-      {
-        tenantId: tenant.id,
-        locationId: location.id,
-        name: "Heizungswartung",
-        category: "Wartung",
-        durationMinutes: 60,
-        priceCents: 8900,
-        isEmergency: false,
-      },
-      {
-        tenantId: tenant.id,
-        locationId: location.id,
-        name: "Rohrbruch-Notdienst",
-        category: "Notdienst",
-        durationMinutes: 90,
-        priceCents: null,
-        isEmergency: true,
-      },
-      {
-        tenantId: tenant.id,
-        locationId: location.id,
-        name: "Badsanierung Beratung",
-        category: "Beratung",
-        durationMinutes: 45,
-        priceCents: 0,
-        isEmergency: false,
-      },
-    ],
-    skipDuplicates: true,
-  });
+  const services = [
+    {
+      name: "Heizungswartung",
+      category: "Wartung",
+      durationMinutes: 60,
+      priceCents: 8900,
+      isEmergency: false,
+    },
+    {
+      name: "Rohrbruch-Notdienst",
+      category: "Notdienst",
+      durationMinutes: 90,
+      priceCents: null,
+      isEmergency: true,
+    },
+    {
+      name: "Badsanierung Beratung",
+      category: "Beratung",
+      durationMinutes: 45,
+      priceCents: 0,
+      isEmergency: false,
+    },
+  ];
+
+  // Service has no unique constraint on name, so createMany+skipDuplicates
+  // can't dedupe here - look each one up by (tenantId, name) explicitly
+  // to keep re-running the seed idempotent.
+  for (const service of services) {
+    const existing = await prisma.service.findFirst({
+      where: { tenantId: tenant.id, name: service.name },
+    });
+    if (!existing) {
+      await prisma.service.create({
+        data: { tenantId: tenant.id, locationId: location.id, ...service },
+      });
+    }
+  }
 
   const passwordHash = await bcrypt.hash(DEMO_ADMIN_PASSWORD, 10);
   await prisma.adminUser.upsert({
