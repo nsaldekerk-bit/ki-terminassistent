@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireTenantId } from "@/lib/auth-helpers";
+import { timeWindowSchema } from "@/lib/validation/hours";
 
 const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
@@ -18,7 +19,16 @@ export async function updateHours(formData: FormData) {
     const start = String(formData.get(`${day}_start`) ?? "");
     const end = String(formData.get(`${day}_end`) ?? "");
 
-    openingHours[day] = closed || !start || !end ? [] : [{ start, end }];
+    if (closed || !start || !end) {
+      openingHours[day] = [];
+      continue;
+    }
+
+    const parsed = timeWindowSchema.safeParse({ start, end });
+    if (!parsed.success) {
+      throw new Error("invalid_input");
+    }
+    openingHours[day] = [parsed.data];
   }
 
   await prisma.location.update({
