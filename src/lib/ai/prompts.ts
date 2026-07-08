@@ -1,9 +1,10 @@
 import { formatInTimeZone } from "date-fns-tz";
+import { de } from "date-fns/locale";
 import type { Location, Service, Tenant } from "@prisma/client";
 
 export function buildSystemPrompt(params: { tenant: Tenant; location: Location; services: Service[] }): string {
   const { tenant, location, services } = params;
-  const now = formatInTimeZone(new Date(), location.timezone, "EEEE, d. MMMM yyyy, HH:mm 'Uhr'");
+  const now = formatInTimeZone(new Date(), location.timezone, "EEEE, d. MMMM yyyy, HH:mm 'Uhr'", { locale: de });
 
   const serviceList = services
     .map((s) => {

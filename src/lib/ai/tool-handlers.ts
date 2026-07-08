@@ -2,6 +2,9 @@ import { addDays } from "date-fns";
 import { prisma } from "@/lib/db";
 import { getBookableSlots } from "@/lib/availability/slots";
 import { createAppointment, SlotUnavailableError } from "@/lib/availability/book";
+import { getMailer } from "@/lib/mail";
+import { bookingConfirmationEmail } from "@/lib/mail/templates/booking-confirmation";
+import { ownerNotificationEmail } from "@/lib/mail/templates/owner-notification";
 
 export interface ToolContext {
   tenantId: string;
@@ -78,11 +81,70 @@ async function createAppointmentRequest(input: Record<string, unknown>, ctx: Too
       startTime,
       createdVia: "chat",
     });
+
+    await sendBookingEmails({
+      tenantId: ctx.tenantId,
+      locationId: ctx.locationId,
+      serviceId,
+      customerName,
+      customerPhone,
+      customerEmail,
+      startTime,
+    });
+
     return { success: true, appointmentId: appointment.id, status: appointment.status };
   } catch (error) {
     if (error instanceof SlotUnavailableError) {
       return { success: false, error: "slot_unavailable" };
     }
     throw error;
+  }
+}
+
+async function sendBookingEmails(params: {
+  tenantId: string;
+  locationId: string;
+  serviceId: string;
+  customerName: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  startTime: Date;
+}) {
+  const { tenantId, locationId, serviceId, customerName, customerPhone, customerEmail, startTime } = params;
+
+  const [tenant, location, service, owner] = await Promise.all([
+    prisma.tenant.findUniqueOrThrow({ where: { id: tenantId } }),
+    prisma.location.findUniqueOrThrow({ where: { id: locationId } }),
+    prisma.service.findUniqueOrThrow({ where: { id: serviceId } }),
+    prisma.adminUser.findFirst({ where: { tenantId } }),
+  ]);
+
+  const mailer = getMailer();
+
+  if (customerEmail) {
+    const email = bookingConfirmationEmail({
+      tenantName: tenant.name,
+      customerName,
+      serviceName: service.name,
+      startTime,
+      timezone: location.timezone,
+    });
+    await mailer.send({ to: customerEmail, ...email }).catch((err) => {
+      console.error("Failed to send booking confirmation email", err);
+    });
+  }
+
+  if (owner?.email) {
+    const email = ownerNotificationEmail({
+      customerName,
+      customerPhone,
+      customerEmail,
+      serviceName: service.name,
+      startTime,
+      timezone: location.timezone,
+    });
+    await mailer.send({ to: owner.email, ...email }).catch((err) => {
+      console.error("Failed to send owner notification email", err);
+    });
   }
 }
