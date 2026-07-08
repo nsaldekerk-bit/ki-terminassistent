@@ -1,0 +1,201 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tenant {
+  id                 String   @id @default(uuid())
+  name               String
+  slug               String   @unique
+  plan               String   @default("v1")
+  subscriptionStatus String   @default("active") @map("subscription_status")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  adminUsers    AdminUser[]
+  locations     Location[]
+  employees     Employee[]
+  services      Service[]
+  customers     Customer[]
+  appointments  Appointment[]
+  conversations Conversation[]
+
+  @@map("tenants")
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  tenantId     String   @map("tenant_id")
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("admin_users")
+}
+
+model Location {
+  id           String  @id @default(uuid())
+  tenantId     String  @map("tenant_id")
+  name         String
+  address      String?
+  phone        String?
+  timezone     String  @default("Europe/Berlin")
+  openingHours Json    @map("opening_hours")
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  employees    Employee[]
+  services     Service[]
+  appointments Appointment[]
+
+  @@index([tenantId])
+  @@map("locations")
+}
+
+model Employee {
+  id           String  @id @default(uuid())
+  tenantId     String  @map("tenant_id")
+  locationId   String  @map("location_id")
+  name         String
+  email        String?
+  role         String?
+  workingHours Json?   @map("working_hours")
+  vacationDays Json?   @map("vacation_days")
+
+  tenant                 Tenant         @relation(fields: [tenantId], references: [id])
+  location               Location       @relation(fields: [locationId], references: [id])
+  appointments           Appointment[]
+  escalatedConversations Conversation[]
+
+  @@index([tenantId])
+  @@map("employees")
+}
+
+model Service {
+  id              String  @id @default(uuid())
+  tenantId        String  @map("tenant_id")
+  locationId      String? @map("location_id")
+  name            String
+  category        String?
+  durationMinutes Int     @map("duration_minutes")
+  priceCents      Int?    @map("price_cents")
+  areaSize        String? @map("area_size")
+  isEmergency     Boolean @default(false) @map("is_emergency")
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  location     Location?     @relation(fields: [locationId], references: [id])
+  appointments Appointment[]
+
+  @@index([tenantId])
+  @@map("services")
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  appointments  Appointment[]
+  conversations Conversation[]
+
+  @@index([tenantId])
+  @@map("customers")
+}
+
+enum AppointmentStatus {
+  requested
+  confirmed
+  cancelled
+  completed
+}
+
+enum CreatedVia {
+  chat
+  phone
+  manual
+}
+
+model Appointment {
+  id         String            @id @default(uuid())
+  tenantId   String            @map("tenant_id")
+  locationId String            @map("location_id")
+  employeeId String?           @map("employee_id")
+  serviceId  String            @map("service_id")
+  customerId String            @map("customer_id")
+  startTime  DateTime          @map("start_time")
+  endTime    DateTime          @map("end_time")
+  status     AppointmentStatus @default(requested)
+  createdVia CreatedVia        @map("created_via")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  location Location  @relation(fields: [locationId], references: [id])
+  employee Employee? @relation(fields: [employeeId], references: [id])
+  service  Service   @relation(fields: [serviceId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
+
+  @@index([tenantId])
+  @@index([locationId, startTime])
+  @@map("appointments")
+}
+
+enum Channel {
+  web_chat
+}
+
+enum ConversationStatus {
+  active
+  escalated
+  closed
+}
+
+enum SenderType {
+  customer
+  ai
+  employee
+}
+
+model Conversation {
+  id                    String             @id @default(uuid())
+  tenantId              String             @map("tenant_id")
+  customerId            String?            @map("customer_id")
+  channel               Channel            @default(web_chat)
+  language              String             @default("de")
+  status                ConversationStatus @default(active)
+  summary               String?
+  escalatedToEmployeeId String?            @map("escalated_to_employee_id")
+  createdAt             DateTime           @default(now()) @map("created_at")
+
+  tenant              Tenant    @relation(fields: [tenantId], references: [id])
+  customer            Customer? @relation(fields: [customerId], references: [id])
+  escalatedToEmployee Employee? @relation(fields: [escalatedToEmployeeId], references: [id])
+  messages            Message[]
+
+  @@index([tenantId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String     @id @default(uuid())
+  conversationId String     @map("conversation_id")
+  senderType     SenderType @map("sender_type")
+  content        String
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId])
+  @@map("messages")
+}
