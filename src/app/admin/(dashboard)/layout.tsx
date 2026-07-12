@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/admin/SignOutButton";
+import { ThemeToggle } from "@/components/admin/ThemeToggle";
 
 const navItems = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/requests", label: "Anfragen" },
   { href: "/admin/services", label: "Dienstleistungen" },
   { href: "/admin/hours", label: "Öffnungszeiten" },
   { href: "/admin/appointments", label: "Termine" },
@@ -13,6 +15,7 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
+      <ThemeToggle />
       <aside className="flex w-56 flex-col border-r border-gray-200 p-4">
         <nav className="flex-1 space-y-1">
           {navItems.map((item) => (

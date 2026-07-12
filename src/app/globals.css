@@ -12,11 +12,58 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Manual dark mode for the admin dashboard, styled to match the Terminassistent
+   widget (steel-grey surfaces + orange accent). Default is light; the toggle in
+   the dashboard sets data-theme="dark" on <html>. Tailwind v4 reads its colors
+   from --color-* variables, so overriding them here re-themes every utility. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0f1216;
+  --foreground: #eef1f4;
+
+  --color-white: #171a1f;
+  --color-gray-50: #1b2027;
+  --color-gray-100: #232a32;
+  --color-gray-200: #2b323b;
+  --color-gray-300: #3a424c;
+  --color-gray-400: #7c858f;
+  --color-gray-500: #9aa4af;
+  --color-gray-600: #b7bfc7;
+  --color-gray-700: #d3d9de;
+  --color-gray-800: #e4e8ec;
+  --color-gray-900: #eef1f4;
+  --color-red-600: #ff6b6b;
+  --color-green-700: #4ec98a;
+}
+
+/* bg-gray-900 is used for both dark surfaces (code block, chat bubbles) and
+   primary buttons. Keep surfaces dark, but turn the buttons the widget orange. */
+:root[data-theme="dark"] .bg-gray-900 {
+  background-color: #0a0c10;
+}
+:root[data-theme="dark"] button.bg-gray-900 {
+  background-color: #ec6a1e;
+  background-image: linear-gradient(150deg, #ff7d33, #ec6a1e);
+}
+:root[data-theme="dark"] button.bg-gray-900:hover {
+  filter: brightness(1.06);
+}
+:root[data-theme="dark"] .text-white {
+  color: #ffffff;
+}
+
+/* Native <select> dropdowns: give the box and its options an explicit dark
+   background so the option text (light) stays readable when the menu opens.
+   Without this, some browsers render the popup on a light OS menu background,
+   making light option text invisible. */
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] select option {
+  background-color: #1b2027;
+  color: #eef1f4;
+}
+:root[data-theme="dark"] aside nav a:hover {
+  background-color: color-mix(in srgb, #ff7d33 16%, transparent);
+  color: #ff9a5c;
 }
 
 body {

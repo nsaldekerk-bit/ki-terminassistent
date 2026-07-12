@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
 import { resolveTenantBySlug } from "@/lib/tenant/resolve";
 import { ChatWidget } from "@/components/widget/ChatWidget";
 
@@ -14,5 +15,11 @@ export default async function EmbedPage({
     notFound();
   }
 
-  return <ChatWidget tenantSlug={tenant.slug} tenantName={tenant.name} />;
+  const services = await prisma.service.findMany({
+    where: { tenantId: tenant.id },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  return <ChatWidget tenantSlug={tenant.slug} tenantName={tenant.name} services={services} />;
 }

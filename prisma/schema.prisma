@@ -16,13 +16,14 @@ model Tenant {
   subscriptionStatus String   @default("active") @map("subscription_status")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  adminUsers    AdminUser[]
-  locations     Location[]
-  employees     Employee[]
-  services      Service[]
-  customers     Customer[]
-  appointments  Appointment[]
-  conversations Conversation[]
+  adminUsers      AdminUser[]
+  locations       Location[]
+  employees       Employee[]
+  services        Service[]
+  customers       Customer[]
+  appointments    Appointment[]
+  conversations   Conversation[]
+  bookingRequests BookingRequest[]
 
   @@map("tenants")
 }
@@ -88,9 +89,10 @@ model Service {
   areaSize        String? @map("area_size")
   isEmergency     Boolean @default(false) @map("is_emergency")
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
-  location     Location?     @relation(fields: [locationId], references: [id])
-  appointments Appointment[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  location        Location?        @relation(fields: [locationId], references: [id])
+  appointments    Appointment[]
+  bookingRequests BookingRequest[]
 
   @@index([tenantId])
   @@map("services")
@@ -106,9 +108,10 @@ model Customer {
   notes     String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
-  appointments  Appointment[]
-  conversations Conversation[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  appointments    Appointment[]
+  conversations   Conversation[]
+  bookingRequests BookingRequest[]
 
   @@index([tenantId])
   @@map("customers")
@@ -198,4 +201,56 @@ model Message {
 
   @@index([conversationId])
   @@map("messages")
+}
+
+enum RequestType {
+  consultation
+  booking
+}
+
+enum RequestStatus {
+  new
+  contacted
+  scheduled
+  closed
+}
+
+model BookingRequest {
+  id            String        @id @default(uuid())
+  tenantId      String        @map("tenant_id")
+  customerId    String        @map("customer_id")
+  serviceId     String?       @map("service_id")
+  type          RequestType
+  status        RequestStatus @default(new)
+  reference     String        @unique
+  serviceLabel  String?       @map("service_label")
+  areaText      String?       @map("area_text")
+  situation     String?
+  address       String?
+  preferredDate DateTime?     @map("preferred_date")
+  preferredTime String?       @map("preferred_time")
+  slotStart     DateTime?     @map("slot_start")
+  slotEnd       DateTime?     @map("slot_end")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id])
+  customer Customer       @relation(fields: [customerId], references: [id])
+  service  Service?       @relation(fields: [serviceId], references: [id])
+  photos   RequestPhoto[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("booking_requests")
+}
+
+model RequestPhoto {
+  id        String   @id @default(uuid())
+  requestId String   @map("request_id")
+  dataUrl   String   @map("data_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  request BookingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("request_photos")
 }

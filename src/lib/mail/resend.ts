@@ -20,6 +20,7 @@ export class ResendMailer implements Mailer {
       subject: input.subject,
       html: input.html,
       text: input.text,
+      replyTo: input.replyTo,
     });
 
     if (error) {

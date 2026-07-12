@@ -3,6 +3,7 @@ export interface MailInput {
   subject: string;
   html: string;
   text?: string;
+  replyTo?: string;
 }
 
 export interface Mailer {

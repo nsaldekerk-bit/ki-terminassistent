@@ -33,6 +33,7 @@ export class SmtpMailer implements Mailer {
       subject: input.subject,
       html: input.html,
       text: input.text,
+      replyTo: input.replyTo,
     });
   }
 }
