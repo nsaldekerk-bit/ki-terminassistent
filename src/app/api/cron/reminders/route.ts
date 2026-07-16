@@ -8,10 +8,11 @@ import { requestReminderEmail } from "@/lib/mail/templates/request-reminder";
 export const maxDuration = 60;
 
 /**
- * The job runs once in the evening (Vercel Hobby allows one run per day), so
- * the window has to span the whole of tomorrow rather than a tight 24h band.
- * Firing at 17:00 UTC this covers ~23:00 tonight through ~23:00 tomorrow.
- * `reminderSentAt` makes a wide window safe — nobody is reminded twice.
+ * Scheduled daily at 17:00 UTC in vercel.json — Vercel's Hobby plan permits
+ * only one cron run per day, so the window spans the whole of tomorrow rather
+ * than a tight 24h band (~23:00 tonight through ~23:00 tomorrow). On Pro,
+ * switch the schedule to hourly and narrow this to 23..25.
+ * `reminderSentAt` makes the wide window safe — nobody is reminded twice.
  */
 const WINDOW_START_HOURS = 6;
 const WINDOW_END_HOURS = 30;

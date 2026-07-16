@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "comment": "Evening before: remind every customer with an appointment tomorrow. Daily, because Vercel's Hobby plan only allows one run per day — on Pro this can go hourly with a narrower window.",
       "path": "/api/cron/reminders",
       "schedule": "0 17 * * *"
     }
