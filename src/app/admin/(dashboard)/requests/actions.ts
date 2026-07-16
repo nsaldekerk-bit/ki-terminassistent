@@ -7,7 +7,7 @@ import { requireTenantId } from "@/lib/auth-helpers";
 import { getMailer } from "@/lib/mail";
 
 const statusSchema = z.object({
-  status: z.enum(["new", "contacted", "scheduled", "closed"]),
+  status: z.enum(["new", "contacted", "scheduled", "closed", "cancelled"]),
 });
 
 export type ReplyState = { ok?: boolean; error?: string } | null;

@@ -36,8 +36,13 @@ export async function getWidgetAvailability(params: {
   durationMinutes: number;
   fromDate: Date;
   toDate: Date;
+  /**
+   * A request whose own slot should not count as taken. Used by the reschedule
+   * page so the customer doesn't see their current appointment blocked.
+   */
+  excludeRequestId?: string;
 }): Promise<{ timezone: string; days: WidgetDay[] }> {
-  const { tenantId, durationMinutes, fromDate, toDate } = params;
+  const { tenantId, durationMinutes, fromDate, toDate, excludeRequestId } = params;
 
   const location = await prisma.location.findFirstOrThrow({ where: { tenantId } });
   const locationId = location.id;
@@ -58,8 +63,10 @@ export async function getWidgetAvailability(params: {
     prisma.bookingRequest.findMany({
       where: {
         tenantId,
+        status: { not: "cancelled" },
         slotStart: { not: null, lt: toDate },
         slotEnd: { gt: fromDate },
+        ...(excludeRequestId ? { id: { not: excludeRequestId } } : {}),
       },
       select: { slotStart: true, slotEnd: true },
     }),

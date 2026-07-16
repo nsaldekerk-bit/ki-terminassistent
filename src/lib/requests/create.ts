@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getMailer } from "@/lib/mail";
 import { requestNotificationEmail } from "@/lib/mail/templates/request-notification";
 import { requestConfirmationEmail } from "@/lib/mail/templates/request-confirmation";
+import { createManageToken, manageUrlFor } from "@/lib/requests/token";
 import type { BookingRequestInput } from "@/lib/validation/booking-request";
 
 export class SlotTakenError extends Error {
@@ -27,6 +28,8 @@ function makeReference(name: string): string {
 export interface CreatedRequest {
   reference: string;
   requestId: string;
+  /** Link the customer uses to reschedule or cancel without an account. */
+  manageUrl: string;
 }
 
 export async function createBookingRequest(
@@ -75,6 +78,7 @@ export async function createBookingRequest(
       prisma.bookingRequest.findFirst({
         where: {
           tenantId: tenant.id,
+          status: { not: "cancelled" },
           slotStart: { lt: slotEnd },
           slotEnd: { gt: slotStart },
         },
@@ -101,6 +105,7 @@ export async function createBookingRequest(
   });
 
   const reference = makeReference(tenant.name);
+  const manageToken = createManageToken();
   const request = await prisma.bookingRequest.create({
     data: {
       tenantId: tenant.id,
@@ -108,6 +113,7 @@ export async function createBookingRequest(
       serviceId: serviceId ?? undefined,
       type: input.type,
       reference,
+      manageToken,
       serviceLabel: input.serviceLabel ?? undefined,
       areaText: input.areaText ?? undefined,
       situation: input.situation ?? undefined,
@@ -122,6 +128,8 @@ export async function createBookingRequest(
 
   // Best-effort notifications. Uses the configured mail provider (console in
   // dev), and never blocks or fails the customer's submission.
+  const manageUrl = manageUrlFor(manageToken);
+
   void sendNotifications({
     tenant,
     input,
@@ -132,11 +140,12 @@ export async function createBookingRequest(
     preferredDate,
     preferredTime,
     hasSlot: slotStart !== null,
+    manageUrl,
   }).catch((err) => {
     console.error("Failed to send request notification emails", err);
   });
 
-  return { reference, requestId: request.id };
+  return { reference, requestId: request.id, manageUrl };
 }
 
 async function sendNotifications(params: {
@@ -149,8 +158,9 @@ async function sendNotifications(params: {
   preferredDate: Date | null;
   preferredTime: string | null;
   hasSlot: boolean;
+  manageUrl: string;
 }) {
-  const { tenant, input, reference, customerName, photoCount, timezone, preferredDate, preferredTime, hasSlot } =
+  const { tenant, input, reference, customerName, photoCount, timezone, preferredDate, preferredTime, hasSlot, manageUrl } =
     params;
 
   const owner = await prisma.adminUser.findFirst({ where: { tenantId: tenant.id } });
@@ -189,6 +199,7 @@ async function sendNotifications(params: {
     preferredTime,
     hasSlot,
     timezone,
+    manageUrl,
   });
   await mailer
     .send({ to: input.customer.email, replyTo: owner?.email ?? undefined, ...email })

@@ -181,6 +181,7 @@ export function ChatWidget({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
+  const [manageUrl, setManageUrl] = useState<string | null>(null);
 
   const [avail, setAvail] = useState<AvailResponse | null>(null);
   const [availLoading, setAvailLoading] = useState(false);
@@ -371,6 +372,7 @@ export function ChatWidget({
       if (!res.ok) throw new Error("request_failed");
       const json = await res.json();
       setReference(json.reference ?? "—");
+      setManageUrl(json.manageUrl ?? null);
     } catch {
       setFormError("Die Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut.");
     } finally {
@@ -969,6 +971,11 @@ export function ChatWidget({
             <div className="kt-ref">
               Ihre Vorgangsnummer: <b>{reference}</b>
             </div>
+            {data.slotStart && manageUrl && (
+              <a className="kt-manage" href={manageUrl} target="_blank" rel="noopener noreferrer">
+                Termin verschieben oder absagen
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -1203,6 +1210,8 @@ const CSS = `
 .kt-success p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); max-width: 30ch; }
 .kt-ref { font-size: 12px; color: var(--ink-soft); background: var(--panel-2); border: 1px solid var(--line); padding: 0.4rem 0.7rem; border-radius: 9px; font-variant-numeric: tabular-nums; }
 .kt-ref b { color: var(--ink); letter-spacing: 0.04em; }
+.kt-manage { font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.kt-manage:hover { filter: brightness(1.15); }
 
 .kt-foot { text-align: center; font-size: 10.5px; color: var(--ink-faint); padding: 0.5rem 0.8rem; border-top: 1px solid var(--line-soft); }
 .kt-foot b { color: var(--ink-soft); font-weight: 600; }

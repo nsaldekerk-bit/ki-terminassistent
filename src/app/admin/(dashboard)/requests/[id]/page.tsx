@@ -5,6 +5,7 @@ import { de } from "date-fns/locale";
 import { prisma } from "@/lib/db";
 import { requireTenantId } from "@/lib/auth-helpers";
 import { ReplyBox } from "@/components/admin/ReplyBox";
+import { manageUrlFor } from "@/lib/requests/token";
 import { updateRequestStatus } from "../actions";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -17,6 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
   contacted: "Kontaktiert",
   scheduled: "Terminiert",
   closed: "Abgeschlossen",
+  cancelled: "Vom Kunden abgesagt",
 };
 
 export default async function RequestDetailPage({
@@ -58,6 +60,22 @@ export default async function RequestDetailPage({
     ["Eingegangen", formatInTimeZone(request.createdAt, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de })],
   ];
 
+  if (request.rescheduledAt) {
+    rows.push([
+      "Verschoben am",
+      formatInTimeZone(request.rescheduledAt, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de }),
+    ]);
+  }
+  if (request.cancelledAt) {
+    rows.push([
+      "Abgesagt am",
+      formatInTimeZone(request.cancelledAt, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de }),
+    ]);
+  }
+
+  // The customer's personal link — handy to resend if they lost the email.
+  const manageUrl = request.manageToken ? manageUrlFor(request.manageToken) : null;
+
   return (
     <div className="max-w-2xl space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -75,6 +93,21 @@ export default async function RequestDetailPage({
           </div>
         ))}
       </dl>
+
+      {manageUrl && (
+        <div className="space-y-1">
+          <h2 className="text-sm font-medium text-gray-700">Terminlink des Kunden</h2>
+          <p className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs break-all text-gray-600">
+            <a href={manageUrl} target="_blank" rel="noreferrer" className="hover:underline">
+              {manageUrl}
+            </a>
+          </p>
+          <p className="text-xs text-gray-400">
+            Damit verschiebt oder storniert der Kunde selbst. Nur weitergeben, wenn er die Bestätigung verloren
+            hat.
+          </p>
+        </div>
+      )}
 
       {request.situation && (
         <div className="space-y-1">

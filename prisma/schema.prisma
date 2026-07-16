@@ -213,6 +213,7 @@ enum RequestStatus {
   contacted
   scheduled
   closed
+  cancelled
 }
 
 model BookingRequest {
@@ -223,6 +224,9 @@ model BookingRequest {
   type          RequestType
   status        RequestStatus @default(new)
   reference     String        @unique
+  // Unguessable token that lets the customer open their own booking to
+  // reschedule or cancel it, without an account. Sent in the confirmation.
+  manageToken   String?       @unique @map("manage_token")
   serviceLabel  String?       @map("service_label")
   areaText      String?       @map("area_text")
   situation     String?
@@ -231,6 +235,8 @@ model BookingRequest {
   preferredTime String?       @map("preferred_time")
   slotStart     DateTime?     @map("slot_start")
   slotEnd       DateTime?     @map("slot_end")
+  rescheduledAt DateTime?     @map("rescheduled_at")
+  cancelledAt   DateTime?     @map("cancelled_at")
   createdAt     DateTime      @default(now()) @map("created_at")
 
   tenant   Tenant         @relation(fields: [tenantId], references: [id])

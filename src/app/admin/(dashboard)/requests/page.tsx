@@ -14,6 +14,7 @@ const STATUS_LABELS: Record<string, string> = {
   contacted: "Kontaktiert",
   scheduled: "Terminiert",
   closed: "Abgeschlossen",
+  cancelled: "Vom Kunden abgesagt",
 };
 
 export default async function RequestsPage() {

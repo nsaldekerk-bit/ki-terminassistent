@@ -23,7 +23,11 @@ export async function POST(request: Request) {
 
   try {
     const result = await createBookingRequest(parsed.data, { id: tenant.id, name: tenant.name });
-    return NextResponse.json({ success: true, reference: result.reference });
+    return NextResponse.json({
+      success: true,
+      reference: result.reference,
+      manageUrl: result.manageUrl,
+    });
   } catch (error) {
     if (error instanceof SlotTakenError) {
       return NextResponse.json({ error: "slot_taken" }, { status: 409 });
