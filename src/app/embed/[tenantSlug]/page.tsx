@@ -15,11 +15,26 @@ export default async function EmbedPage({
     notFound();
   }
 
-  const services = await prisma.service.findMany({
-    where: { tenantId: tenant.id },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const [services, location] = await Promise.all([
+    prisma.service.findMany({
+      where: { tenantId: tenant.id },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.location.findFirst({
+      where: { tenantId: tenant.id },
+      select: { emergencyPhone: true, emergencyNote: true, serviceAreaPostcodes: true },
+    }),
+  ]);
 
-  return <ChatWidget tenantSlug={tenant.slug} tenantName={tenant.name} services={services} />;
+  return (
+    <ChatWidget
+      tenantSlug={tenant.slug}
+      tenantName={tenant.name}
+      services={services}
+      emergencyPhone={location?.emergencyPhone ?? null}
+      emergencyNote={location?.emergencyNote ?? null}
+      hasServiceArea={(location?.serviceAreaPostcodes.length ?? 0) > 0}
+    />
+  );
 }

@@ -5,9 +5,12 @@ import { ThemeToggle } from "@/components/admin/ThemeToggle";
 const navItems = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/requests", label: "Anfragen" },
+  { href: "/admin/appointments", label: "Termine" },
   { href: "/admin/services", label: "Dienstleistungen" },
   { href: "/admin/hours", label: "Öffnungszeiten" },
-  { href: "/admin/appointments", label: "Termine" },
+  { href: "/admin/absences", label: "Urlaub & Schließzeiten" },
+  { href: "/admin/profile", label: "Betrieb" },
+  { href: "/admin/faq", label: "Eigene Fragen" },
   { href: "/admin/conversations", label: "Gespräche" },
   { href: "/admin/settings/embed", label: "Einbetten" },
 ];

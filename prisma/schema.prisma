@@ -24,6 +24,8 @@ model Tenant {
   appointments    Appointment[]
   conversations   Conversation[]
   bookingRequests BookingRequest[]
+  absences        Absence[]
+  faqEntries      FaqEntry[]
 
   @@map("tenants")
 }
@@ -47,8 +49,21 @@ model Location {
   name         String
   address      String?
   phone        String?
+  email        String?
+  website      String?
   timezone     String  @default("Europe/Berlin")
   openingHours Json    @map("opening_hours")
+
+  // Travel time kept free between two appointments, so a tradesperson can
+  // actually drive from one job to the next.
+  bufferMinutes Int @default(0) @map("buffer_minutes")
+
+  // Emergency contact shown in the widget's emergency path.
+  emergencyPhone String? @map("emergency_phone")
+  emergencyNote  String? @map("emergency_note")
+
+  // Postcodes the business travels to. Empty = serves everywhere (no check).
+  serviceAreaPostcodes String[] @default([]) @map("service_area_postcodes")
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id])
   employees    Employee[]
@@ -57,6 +72,39 @@ model Location {
 
   @@index([tenantId])
   @@map("locations")
+}
+
+/// Holidays, vacation and other closures. Blocks the calendar for the range.
+model Absence {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, startDate, endDate])
+  @@map("absences")
+}
+
+/// Business-specific question/answer pairs the FAQ can answer verbatim.
+model FaqEntry {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  question  String
+  answer    String
+  /// Extra words that should also match this entry, e.g. "notdienst, notfall".
+  keywords  String?
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("faq_entries")
 }
 
 model Employee {
@@ -231,12 +279,19 @@ model BookingRequest {
   areaText      String?       @map("area_text")
   situation     String?
   address       String?
+  postcode      String?
   preferredDate DateTime?     @map("preferred_date")
   preferredTime String?       @map("preferred_time")
   slotStart     DateTime?     @map("slot_start")
   slotEnd       DateTime?     @map("slot_end")
   rescheduledAt DateTime?     @map("rescheduled_at")
   cancelledAt   DateTime?     @map("cancelled_at")
+  /// Customer used the emergency path — needs to be seen first.
+  isEmergency   Boolean       @default(false) @map("is_emergency")
+  /// When the customer accepted the privacy notice (GDPR record).
+  consentAt     DateTime?     @map("consent_at")
+  /// Set once the 24h reminder went out, so it is never sent twice.
+  reminderSentAt DateTime?    @map("reminder_sent_at")
   createdAt     DateTime      @default(now()) @map("created_at")
 
   tenant   Tenant         @relation(fields: [tenantId], references: [id])

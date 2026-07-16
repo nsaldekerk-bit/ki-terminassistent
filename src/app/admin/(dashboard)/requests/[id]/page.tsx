@@ -49,7 +49,7 @@ export default async function RequestDetailPage({
   const timing = [preferred, request.preferredTime].filter(Boolean).join(", ") || "—";
 
   const rows: [string, string][] = [
-    ["Art", TYPE_LABELS[request.type] ?? request.type],
+    ["Art", request.isEmergency ? "🚨 NOTFALL" : (TYPE_LABELS[request.type] ?? request.type)],
     ["Leistung", request.serviceLabel ?? request.service?.name ?? "—"],
     ["Fläche", request.areaText ?? "—"],
     ["Ort", request.address ?? "—"],
@@ -60,6 +60,18 @@ export default async function RequestDetailPage({
     ["Eingegangen", formatInTimeZone(request.createdAt, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de })],
   ];
 
+  if (request.consentAt) {
+    rows.push([
+      "Datenschutz",
+      `Einwilligung erteilt am ${formatInTimeZone(request.consentAt, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de })}`,
+    ]);
+  }
+  if (request.reminderSentAt) {
+    rows.push([
+      "Erinnerung",
+      `Verschickt am ${formatInTimeZone(request.reminderSentAt, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de })}`,
+    ]);
+  }
   if (request.rescheduledAt) {
     rows.push([
       "Verschoben am",

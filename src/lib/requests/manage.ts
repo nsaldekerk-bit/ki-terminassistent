@@ -2,6 +2,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { prisma } from "@/lib/db";
 import { getMailer } from "@/lib/mail";
 import { SlotTakenError } from "@/lib/requests/create";
+import { findSlotConflict } from "@/lib/availability/conflicts";
 import { manageUrlFor } from "@/lib/requests/token";
 import { requestChangeConfirmationEmail } from "@/lib/mail/templates/request-change-confirmation";
 import { requestChangeNotificationEmail } from "@/lib/mail/templates/request-change-notification";
@@ -56,44 +57,6 @@ export function manageState(request: {
   return { editable: true };
 }
 
-/** Throws if the given window collides with anything else for this tenant. */
-async function assertSlotFree(params: {
-  tenantId: string;
-  slotStart: Date;
-  slotEnd: Date;
-  ignoreRequestId: string;
-}) {
-  const { tenantId, slotStart, slotEnd, ignoreRequestId } = params;
-  const location = await prisma.location.findFirst({ where: { tenantId }, select: { id: true } });
-
-  const [appointmentClash, requestClash] = await Promise.all([
-    location
-      ? prisma.appointment.findFirst({
-          where: {
-            tenantId,
-            locationId: location.id,
-            status: { not: "cancelled" },
-            startTime: { lt: slotEnd },
-            endTime: { gt: slotStart },
-          },
-          select: { id: true },
-        })
-      : null,
-    prisma.bookingRequest.findFirst({
-      where: {
-        tenantId,
-        id: { not: ignoreRequestId },
-        status: { not: "cancelled" },
-        slotStart: { lt: slotEnd },
-        slotEnd: { gt: slotStart },
-      },
-      select: { id: true },
-    }),
-  ]);
-
-  if (appointmentClash || requestClash) throw new SlotTakenError();
-}
-
 export async function rescheduleRequest(params: {
   token: string;
   slotStart: Date;
@@ -110,12 +73,13 @@ export async function rescheduleRequest(params: {
     throw new SlotTakenError();
   }
 
-  await assertSlotFree({
+  const conflict = await findSlotConflict({
     tenantId: request.tenantId,
     slotStart,
     slotEnd,
     ignoreRequestId: request.id,
   });
+  if (conflict) throw new SlotTakenError();
 
   const location = await prisma.location.findFirst({
     where: { tenantId: request.tenantId },

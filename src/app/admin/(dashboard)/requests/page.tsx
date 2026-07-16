@@ -23,7 +23,8 @@ export default async function RequestsPage() {
   const requests = await prisma.bookingRequest.findMany({
     where: { tenantId },
     include: { customer: true, _count: { select: { photos: true } } },
-    orderBy: { createdAt: "desc" },
+    // Emergencies first — that is the whole point of the emergency path.
+    orderBy: [{ isEmergency: "desc" }, { createdAt: "desc" }],
     take: 100,
   });
 
@@ -49,7 +50,13 @@ export default async function RequestsPage() {
               <td className="py-2">
                 {formatInTimeZone(r.createdAt, location.timezone, "d. MMM yyyy, HH:mm", { locale: de })}
               </td>
-              <td>{TYPE_LABELS[r.type] ?? r.type}</td>
+              <td>
+                {r.isEmergency ? (
+                  <span className="font-semibold text-red-600">🚨 Notfall</span>
+                ) : (
+                  (TYPE_LABELS[r.type] ?? r.type)
+                )}
+              </td>
               <td>{r.serviceLabel ?? "—"}</td>
               <td>
                 {r.customer.name}

@@ -5,6 +5,7 @@ import { getMailer } from "@/lib/mail";
 import { requestNotificationEmail } from "@/lib/mail/templates/request-notification";
 import { requestConfirmationEmail } from "@/lib/mail/templates/request-confirmation";
 import { createManageToken, manageUrlFor } from "@/lib/requests/token";
+import { findSlotConflict } from "@/lib/availability/conflicts";
 import type { BookingRequestInput } from "@/lib/validation/booking-request";
 
 export class SlotTakenError extends Error {
@@ -61,31 +62,14 @@ export async function createBookingRequest(
     slotStart = new Date(input.slotStart);
     slotEnd = input.slotEnd ? new Date(input.slotEnd) : addMinutes(slotStart, 30);
 
-    // Make sure the slot is still free (guards against two people picking it).
-    const [appointmentClash, requestClash] = await Promise.all([
-      location
-        ? prisma.appointment.findFirst({
-            where: {
-              tenantId: tenant.id,
-              locationId: location.id,
-              status: { not: "cancelled" },
-              startTime: { lt: slotEnd },
-              endTime: { gt: slotStart },
-            },
-            select: { id: true },
-          })
-        : null,
-      prisma.bookingRequest.findFirst({
-        where: {
-          tenantId: tenant.id,
-          status: { not: "cancelled" },
-          slotStart: { lt: slotEnd },
-          slotEnd: { gt: slotStart },
-        },
-        select: { id: true },
-      }),
-    ]);
-    if (appointmentClash || requestClash) {
+    // Make sure the slot is still free (guards against two people picking it,
+    // and against booking into a closure or through the travel-time buffer).
+    const conflict = await findSlotConflict({
+      tenantId: tenant.id,
+      slotStart,
+      slotEnd,
+    });
+    if (conflict) {
       throw new SlotTakenError();
     }
 
@@ -118,6 +102,9 @@ export async function createBookingRequest(
       areaText: input.areaText ?? undefined,
       situation: input.situation ?? undefined,
       address: input.address ?? undefined,
+      postcode: input.postcode ?? undefined,
+      isEmergency: input.isEmergency,
+      consentAt: input.consent ? new Date() : undefined,
       preferredDate: preferredDate ?? undefined,
       preferredTime: preferredTime ?? undefined,
       slotStart: slotStart ?? undefined,
@@ -182,6 +169,7 @@ async function sendNotifications(params: {
       preferredTime,
       photoCount,
       timezone,
+      isEmergency: input.isEmergency,
     });
     await mailer.send({ to: owner.email, ...email }).catch((err) => {
       console.error("Failed to send owner notification email", err);

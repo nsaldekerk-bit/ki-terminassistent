@@ -9,6 +9,11 @@ type OpeningHours = Partial<Record<WeekdayKey, TimeWindow[]>>;
 const WEEKDAY_KEYS: WeekdayKey[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const MIN_LEAD_TIME_MINUTES = 60;
 
+/** The calendar day of `d` at UTC midnight — matches how closures are stored. */
+function startOfDayUtc(d: Date): Date {
+  return new Date(`${d.toISOString().slice(0, 10)}T00:00:00.000Z`);
+}
+
 export interface WidgetSlot {
   start: string; // ISO
   end: string; // ISO
@@ -48,8 +53,9 @@ export async function getWidgetAvailability(params: {
   const locationId = location.id;
   const timezone = location.timezone;
   const openingHours = location.openingHours as OpeningHours;
+  const bufferMinutes = location.bufferMinutes;
 
-  const [appointments, requests] = await Promise.all([
+  const [appointments, requests, absences] = await Promise.all([
     prisma.appointment.findMany({
       where: {
         tenantId,
@@ -70,14 +76,35 @@ export async function getWidgetAvailability(params: {
       },
       select: { slotStart: true, slotEnd: true },
     }),
+    prisma.absence.findMany({
+      where: { tenantId, endDate: { gte: startOfDayUtc(fromDate) }, startDate: { lte: toDate } },
+      select: { startDate: true, endDate: true },
+    }),
   ]);
 
+  // Pad every booked block by the travel-time buffer on both sides, so the next
+  // slot can't start until the tradesperson could realistically be there.
+  const pad = bufferMinutes * 60_000;
   const taken: { start: number; end: number }[] = [
-    ...appointments.map((a) => ({ start: a.startTime.getTime(), end: a.endTime.getTime() })),
+    ...appointments.map((a) => ({
+      start: a.startTime.getTime() - pad,
+      end: a.endTime.getTime() + pad,
+    })),
     ...requests
       .filter((r) => r.slotStart && r.slotEnd)
-      .map((r) => ({ start: r.slotStart!.getTime(), end: r.slotEnd!.getTime() })),
+      .map((r) => ({ start: r.slotStart!.getTime() - pad, end: r.slotEnd!.getTime() + pad })),
   ];
+
+  // Closure days are stored as plain calendar dates (UTC midnight); compare on
+  // the tenant-local date string so a closure covers the whole local day.
+  const closedDates = new Set<string>();
+  for (const a of absences) {
+    let d = new Date(a.startDate);
+    while (d.getTime() <= a.endDate.getTime()) {
+      closedDates.add(d.toISOString().slice(0, 10));
+      d = addDays(d, 1);
+    }
+  }
 
   const earliest = Date.now() + MIN_LEAD_TIME_MINUTES * 60_000;
 
@@ -91,7 +118,8 @@ export async function getWidgetAvailability(params: {
   while (cursor.getTime() <= last.getTime()) {
     const dateStr = formatInTimeZone(cursor, "UTC", "yyyy-MM-dd");
     const weekdayIndex = cursor.getUTCDay();
-    const windows = openingHours[WEEKDAY_KEYS[weekdayIndex]] ?? [];
+    // A closure day beats the opening hours entirely.
+    const windows = closedDates.has(dateStr) ? [] : (openingHours[WEEKDAY_KEYS[weekdayIndex]] ?? []);
     const slots: WidgetSlot[] = [];
 
     for (const window of windows) {

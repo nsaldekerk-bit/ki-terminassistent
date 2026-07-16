@@ -15,6 +15,7 @@ export function requestNotificationEmail(params: {
   preferredTime?: string | null;
   photoCount: number;
   timezone: string;
+  isEmergency?: boolean;
 }) {
   const {
     type,
@@ -30,9 +31,14 @@ export function requestNotificationEmail(params: {
     preferredTime,
     photoCount,
     timezone,
+    isEmergency = false,
   } = params;
 
-  const kind = type === "booking" ? "Terminanfrage" : "Beratungsanfrage";
+  const kind = isEmergency
+    ? "NOTFALL-Anfrage"
+    : type === "booking"
+      ? "Terminanfrage"
+      : "Beratungsanfrage";
   const dateStr = preferredDate
     ? formatInTimeZone(preferredDate, timezone, "EEEE, d. MMMM yyyy", { locale: de })
     : null;
@@ -51,12 +57,18 @@ export function requestNotificationEmail(params: {
   ];
   const visible = rows.filter(([, v]) => v);
 
-  const subject = `Neue ${kind}${serviceLabel ? `: ${serviceLabel}` : ""} – ${customerName}`;
-  const text =
-    `Neue ${kind} über den Terminassistenten:\n\n` +
-    visible.map(([k, v]) => `${k}: ${v}`).join("\n");
+  // Put the emergency marker first so it is unmissable in a full inbox.
+  const subject = isEmergency
+    ? `🚨 NOTFALL${serviceLabel ? `: ${serviceLabel}` : ""} – ${customerName} (${customerPhone})`
+    : `Neue ${kind}${serviceLabel ? `: ${serviceLabel}` : ""} – ${customerName}`;
+
+  const intro = isEmergency
+    ? `NOTFALL-Anfrage über den Terminassistenten — bitte zuerst bearbeiten:`
+    : `Neue ${kind} über den Terminassistenten:`;
+
+  const text = `${intro}\n\n` + visible.map(([k, v]) => `${k}: ${v}`).join("\n");
   const html =
-    `<p>Neue <strong>${kind}</strong> über den Terminassistenten:</p><ul>` +
+    `<p>${isEmergency ? `<strong style="color:#b3271b">${intro}</strong>` : `Neue <strong>${kind}</strong> über den Terminassistenten:`}</p><ul>` +
     visible.map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`).join("") +
     `</ul>`;
 

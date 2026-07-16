@@ -64,6 +64,14 @@ interface AvailResponse {
   days: AvailDay[];
 }
 
+interface FaqTurn {
+  question: string;
+  answer: string;
+  needsHuman: boolean;
+}
+
+type PlzState = null | { checking: true } | { checking: false; covered: boolean; checked: boolean };
+
 const WEEKDAY_LABELS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const monthKey = (dateStr: string) => {
@@ -160,10 +168,16 @@ export function ChatWidget({
   tenantSlug,
   tenantName,
   services,
+  emergencyPhone,
+  emergencyNote,
+  hasServiceArea,
 }: {
   tenantSlug: string;
   tenantName: string;
   services: WidgetService[];
+  emergencyPhone?: string | null;
+  emergencyNote?: string | null;
+  hasServiceArea?: boolean;
 }) {
   const reduceMotion = useMemo(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -190,6 +204,21 @@ export function ChatWidget({
   const [monthCursor, setMonthCursor] = useState<{ y: number; m: number } | null>(null);
   const [selDate, setSelDate] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // FAQ: a small question-and-answer exchange before the customer commits to a path.
+  const [faqInput, setFaqInput] = useState("");
+  const [faqLog, setFaqLog] = useState<FaqTurn[]>([]);
+  const [faqBusy, setFaqBusy] = useState(false);
+
+  // Emergency fast path.
+  const [emergency, setEmergency] = useState(false);
+
+  // Postcode / service-area check.
+  const [plz, setPlz] = useState("");
+  const [plzState, setPlzState] = useState<PlzState>(null);
+
+  // GDPR consent — the customer must actively agree before we store anything.
+  const [consent, setConsent] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const done = reference !== null;
@@ -322,6 +351,69 @@ export function ChatWidget({
     setCurrent("service");
   }
 
+  /** Emergency path: same intake, but flagged so the business sees it first. */
+  function chooseEmergency() {
+    setEmergency(true);
+    setMode("booking");
+    setFlow((prev) => [...prev, { step: "welcome", text: "Notfall" }]);
+    setCurrent("service");
+  }
+
+  async function askFaq(e: React.FormEvent) {
+    e.preventDefault();
+    const question = faqInput.trim();
+    if (question.length < 2 || faqBusy) return;
+
+    setFaqBusy(true);
+    setFaqInput("");
+    try {
+      const res = await fetch("/api/faq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantSlug, question }),
+      });
+      if (!res.ok) throw new Error("faq_failed");
+      const json = await res.json();
+      setFaqLog((prev) => [
+        ...prev,
+        { question, answer: json.answer, needsHuman: Boolean(json.needsHuman) },
+      ]);
+    } catch {
+      setFaqLog((prev) => [
+        ...prev,
+        {
+          question,
+          answer: "Das konnte ich gerade nicht nachschlagen. Fragen Sie es gern direkt beim Betrieb an.",
+          needsHuman: true,
+        },
+      ]);
+    } finally {
+      setFaqBusy(false);
+    }
+  }
+
+  async function checkPlz(value: string) {
+    const postcode = value.trim();
+    if (!/^\d{5}$/.test(postcode)) {
+      setPlzState(null);
+      return;
+    }
+    setPlzState({ checking: true });
+    try {
+      const res = await fetch("/api/service-area", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantSlug, postcode }),
+      });
+      if (!res.ok) throw new Error("check_failed");
+      const json = await res.json();
+      setPlzState({ checking: false, covered: Boolean(json.covered), checked: Boolean(json.checked) });
+    } catch {
+      // Never block the customer on a failed check.
+      setPlzState({ checking: false, covered: true, checked: false });
+    }
+  }
+
   async function handleFiles(fileList: FileList | null) {
     if (!fileList) return;
     const room = 6 - data.fotos.length;
@@ -338,7 +430,9 @@ export function ChatWidget({
     setSubmitting(true);
     setFormError(null);
     try {
-      const address = [data.strasse, data.ort].filter(Boolean).join(", ") || null;
+      const address = [data.strasse, [plz, data.ort].filter(Boolean).join(" ")]
+        .filter(Boolean)
+        .join(", ") || null;
       const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -350,6 +444,9 @@ export function ChatWidget({
           areaText: data.flaeche ?? null,
           situation: data.situation ?? null,
           address,
+          postcode: /^\d{5}$/.test(plz) ? plz : null,
+          isEmergency: emergency,
+          consent: true,
           slotStart: data.slotStart ?? null,
           slotEnd: data.slotEnd ?? null,
           customer: {
@@ -388,6 +485,31 @@ export function ChatWidget({
       case "welcome":
         return (
           <div className="kt-choice">
+            {/* Ask first, commit later — most visitors just have a question. */}
+            <form className="kt-ask" onSubmit={askFaq}>
+              <input
+                type="text"
+                className="kt-ask-in"
+                placeholder="Frage stellen — z. B. „Wann haben Sie geöffnet?“"
+                value={faqInput}
+                onChange={(e) => setFaqInput(e.target.value)}
+                disabled={faqBusy}
+                aria-label="Frage an den Betrieb"
+              />
+              <button
+                type="submit"
+                className="kt-ask-go"
+                disabled={faqBusy || faqInput.trim().length < 2}
+                aria-label="Frage absenden"
+              >
+                {faqBusy ? <span className="kt-spin" /> : IconSend}
+              </button>
+            </form>
+
+            <div className="kt-or">
+              <span>oder</span>
+            </div>
+
             <button
               className="kt-card"
               onClick={() => chooseMode("consultation", "Beratung / Rückruf")}
@@ -408,6 +530,20 @@ export function ChatWidget({
               </span>
               <span className="kt-chev">{IconChevron}</span>
             </button>
+
+            {emergencyPhone && (
+              <button className="kt-card kt-sos" onClick={chooseEmergency} type="button">
+                <span className="kt-ic">{IconAlert}</span>
+                <span className="kt-ct">
+                  <b>Notfall</b>
+                  <span>
+                    Sofort anrufen: {emergencyPhone}
+                    {emergencyNote ? ` — ${emergencyNote}` : ""}
+                  </span>
+                </span>
+                <span className="kt-chev">{IconChevron}</span>
+              </button>
+            )}
           </div>
         );
 
@@ -578,26 +714,63 @@ export function ChatWidget({
               value={data.strasse ?? ""}
               onChange={(e) => patch({ strasse: e.target.value })}
             />
-            <input
-              className={`kt-inp${invalid.includes("ort") ? " err" : ""}`}
-              placeholder="PLZ und Ort"
-              value={data.ort ?? ""}
-              onChange={(e) => {
-                patch({ ort: e.target.value });
-                setInvalid((prev) => prev.filter((x) => x !== "ort"));
-              }}
-            />
-            {invalid.includes("ort") && <div className="kt-err">Bitte PLZ und Ort angeben.</div>}
+            <div className="kt-row-plz">
+              <input
+                className={`kt-inp${invalid.includes("plz") ? " err" : ""}`}
+                placeholder="PLZ"
+                inputMode="numeric"
+                maxLength={5}
+                value={plz}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 5);
+                  setPlz(v);
+                  setInvalid((prev) => prev.filter((x) => x !== "plz"));
+                  if (v.length === 5) void checkPlz(v);
+                  else setPlzState(null);
+                }}
+              />
+              <input
+                className={`kt-inp${invalid.includes("ort") ? " err" : ""}`}
+                placeholder="Ort"
+                value={data.ort ?? ""}
+                onChange={(e) => {
+                  patch({ ort: e.target.value });
+                  setInvalid((prev) => prev.filter((x) => x !== "ort"));
+                }}
+              />
+            </div>
+
+            {invalid.includes("plz") && <div className="kt-err">Bitte geben Sie eine fünfstellige PLZ an.</div>}
+            {invalid.includes("ort") && <div className="kt-err">Bitte geben Sie den Ort an.</div>}
+
+            {/* Tell the customer right away whether we even travel there. */}
+            {plzState?.checking && <div className="kt-hint">Einzugsgebiet wird geprüft …</div>}
+            {plzState && !plzState.checking && plzState.checked && plzState.covered && (
+              <div className="kt-ok">✓ Sehr gut — zu Ihnen kommen wir.</div>
+            )}
+            {plzState && !plzState.checking && plzState.checked && !plzState.covered && (
+              <div className="kt-warn">
+                Diese Postleitzahl liegt außerhalb unseres üblichen Einzugsgebiets. Sie können die Anfrage
+                trotzdem senden — wir melden uns und sagen Ihnen ehrlich, ob wir es einrichten können.
+              </div>
+            )}
+
             <div className="kt-actions">
               <button
                 type="button"
                 className="kt-btn kt-primary"
                 onClick={() => {
-                  if (!(data.ort ?? "").trim()) {
-                    setInvalid(["ort"]);
+                  const bad: string[] = [];
+                  if (!/^\d{5}$/.test(plz)) bad.push("plz");
+                  if (!(data.ort ?? "").trim()) bad.push("ort");
+                  if (bad.length > 0) {
+                    setInvalid(bad);
                     return;
                   }
-                  const full = [data.strasse, data.ort].map((s) => (s ?? "").trim()).filter(Boolean).join(", ");
+                  const full = [data.strasse, `${plz} ${(data.ort ?? "").trim()}`]
+                    .map((s) => (s ?? "").trim())
+                    .filter(Boolean)
+                    .join(", ");
                   answer("ort", full);
                 }}
               >
@@ -862,12 +1035,20 @@ export function ChatWidget({
 
   function renderSummary() {
     const rows: [string, string, Step][] = [];
-    rows.push(["Anliegen", mode === "booking" ? "Termin buchen" : "Beratung / Rückruf", "welcome"]);
+    rows.push([
+      "Anliegen",
+      emergency ? "Notfall" : mode === "booking" ? "Termin buchen" : "Beratung / Rückruf",
+      "welcome",
+    ]);
     rows.push(["Leistung", data.serviceLabel ?? "—", "service"]);
     if (mode === "booking") rows.push(["Fläche", data.flaeche ?? "—", "flaeche"]);
     rows.push(["Situation", data.situation?.trim() || "—", "situation"]);
     rows.push(["Fotos", data.fotos.length ? `${data.fotos.length} ${data.fotos.length === 1 ? "Foto" : "Fotos"}` : "keine", "fotos"]);
-    rows.push(["Ort", [data.strasse, data.ort].filter(Boolean).join(", ") || "—", "ort"]);
+    rows.push([
+      "Ort",
+      [data.strasse, [plz, data.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "—",
+      "ort",
+    ]);
     rows.push([
       "Termin",
       data.slotStart && data.datum ? `${dateLabel(data.datum)}, ${data.tageszeit}` : "Kein fester Termin",
@@ -890,11 +1071,32 @@ export function ChatWidget({
           ))}
         </div>
         {formError && <div className="kt-err">{formError}</div>}
+
+        {/* GDPR: an explicit, unticked opt-in before any personal data is stored. */}
+        <label className="kt-consent">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            disabled={submitting}
+          />
+          <span>
+            Ich bin einverstanden, dass {tenantName} meine Angaben speichert und verarbeitet, um meine Anfrage
+            zu bearbeiten. Die Daten werden nicht an Dritte weitergegeben. Ich kann diese Einwilligung
+            jederzeit widerrufen.
+          </span>
+        </label>
+
         <div className="kt-actions">
           <button type="button" className="kt-btn kt-ghost" onClick={goBackOne} disabled={submitting}>
             Zurück
           </button>
-          <button type="button" className="kt-btn kt-primary" onClick={() => void submit()} disabled={submitting}>
+          <button
+            type="button"
+            className="kt-btn kt-primary"
+            onClick={() => void submit()}
+            disabled={submitting || !consent}
+          >
             {submitting ? "Wird gesendet …" : "Anfrage absenden"}
           </button>
         </div>
@@ -932,6 +1134,35 @@ export function ChatWidget({
         <div className="kt-msg ai">
           <div className="kt-bubble">Willkommen bei {tenantName}.</div>
         </div>
+
+        {/* Questions asked before picking a path, and their answers. */}
+        {faqLog.map((turn, i) => (
+          <div key={`faq-${i}`}>
+            <div className="kt-msg me">
+              <div className="kt-bubble">{turn.question}</div>
+            </div>
+            <div className="kt-msg ai">
+              <div className="kt-bubble">
+                {renderText(turn.answer)}
+                {turn.needsHuman && (
+                  <button type="button" className="kt-inline-cta" onClick={() => chooseMode("consultation", "Beratung / Rückruf")}>
+                    Rückruf anfordern
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {faqBusy && (
+          <div className="kt-msg ai">
+            <div className="kt-typing">
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
+        )}
+
         {flow.map((item, i) => (
           <div key={i}>
             <div className="kt-msg ai">
@@ -972,9 +1203,19 @@ export function ChatWidget({
               Ihre Vorgangsnummer: <b>{reference}</b>
             </div>
             {data.slotStart && manageUrl && (
-              <a className="kt-manage" href={manageUrl} target="_blank" rel="noopener noreferrer">
-                Termin verschieben oder absagen
-              </a>
+              <div className="kt-links">
+                <a
+                  className="kt-manage"
+                  href={manageUrl.replace("/termin/", "/api/calendar/")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  In meinen Kalender eintragen
+                </a>
+                <a className="kt-manage" href={manageUrl} target="_blank" rel="noopener noreferrer">
+                  Termin verschieben oder absagen
+                </a>
+              </div>
             )}
           </div>
         )}
@@ -1030,6 +1271,17 @@ const IconCalendar = (
 const IconChevron = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
     <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+const IconAlert = (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <path d="M12 9v4M12 17h.01" />
+  </svg>
+);
+const IconSend = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m22 2-7 20-4-9-9-4 20-7z" />
   </svg>
 );
 const IconLeft = (
@@ -1210,8 +1462,42 @@ const CSS = `
 .kt-success p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); max-width: 30ch; }
 .kt-ref { font-size: 12px; color: var(--ink-soft); background: var(--panel-2); border: 1px solid var(--line); padding: 0.4rem 0.7rem; border-radius: 9px; font-variant-numeric: tabular-nums; }
 .kt-ref b { color: var(--ink); letter-spacing: 0.04em; }
+
+/* ---- FAQ ask box (sits above the two paths) ---- */
+.kt-ask { display: flex; gap: 0.4rem; align-items: center; }
+.kt-ask-in { flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); border-radius: 11px; padding: 0.62rem 0.75rem; font: inherit; font-size: 13px; outline: none; transition: border-color 0.15s; }
+.kt-ask-in::placeholder { color: var(--ink-faint); }
+.kt-ask-in:focus { border-color: var(--accent); }
+.kt-ask-in:disabled { opacity: 0.6; }
+.kt-ask-go { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border: none; border-radius: 11px; background: var(--accent); color: #fff; cursor: pointer; transition: filter 0.15s, opacity 0.15s; }
+.kt-ask-go:hover:not(:disabled) { filter: brightness(1.1); }
+.kt-ask-go:disabled { opacity: 0.4; cursor: not-allowed; }
+.kt-spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: kt-rot 0.6s linear infinite; }
+@keyframes kt-rot { to { transform: rotate(360deg); } }
+
+.kt-or { display: flex; align-items: center; gap: 0.6rem; margin: 0.15rem 0; }
+.kt-or::before, .kt-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.kt-or span { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.kt-inline-cta { display: block; margin-top: 0.5rem; background: none; border: none; padding: 0; color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* ---- Emergency path ---- */
+.kt-sos { border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+.kt-sos .kt-ic { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.kt-sos:hover { border-color: var(--bad); }
+
+/* ---- Postcode / service area ---- */
+.kt-row-plz { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.5rem; }
+.kt-hint { font-size: 12px; color: var(--ink-soft); }
+.kt-ok { font-size: 12.5px; font-weight: 600; color: var(--good); }
+.kt-warn { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); background: var(--panel-2); border: 1px solid var(--line); border-left: 2px solid var(--accent); padding: 0.5rem 0.65rem; border-radius: 8px; }
+
+/* ---- GDPR consent ---- */
+.kt-consent { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); }
+.kt-consent input { margin-top: 0.15rem; flex: none; accent-color: var(--accent); width: 15px; height: 15px; }
 .kt-manage { font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .kt-manage:hover { filter: brightness(1.15); }
+.kt-links { display: flex; flex-direction: column; gap: 0.45rem; align-items: center; }
 
 .kt-foot { text-align: center; font-size: 10.5px; color: var(--ink-faint); padding: 0.5rem 0.8rem; border-top: 1px solid var(--line-soft); }
 .kt-foot b { color: var(--ink-soft); font-weight: 600; }

@@ -16,6 +16,11 @@ export const bookingRequestSchema = z.object({
   areaText: z.string().max(100).nullish(),
   situation: z.string().max(4000).nullish(),
   address: z.string().max(300).nullish(),
+  postcode: z.string().regex(/^\d{5}$/).nullish(),
+  /// Customer came in through the emergency path — the business sees it first.
+  isEmergency: z.boolean().default(false),
+  /// The customer ticked the privacy notice. Recorded for GDPR.
+  consent: z.boolean().default(false),
   preferredDate: z.string().max(40).nullish(),
   preferredTime: z.string().max(60).nullish(),
   slotStart: z.string().datetime().nullish(),
