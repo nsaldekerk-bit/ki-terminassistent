@@ -1,23 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
-
-// The public demo widget lives at /embed/<slug>. The slug differs per install
-// (locally "demo" from the seed, "krueger" in production), so resolve it at
-// request time instead of hardcoding: an explicit env override wins, otherwise
-// use the first tenant. If neither is available (e.g. DB unreachable), we hide
-// the demo button and lead with the login instead of linking to a dead URL.
-async function getDemoSlug(): Promise<string | null> {
-  if (process.env.NEXT_PUBLIC_DEMO_SLUG) return process.env.NEXT_PUBLIC_DEMO_SLUG;
-  try {
-    const tenant = await prisma.tenant.findFirst({
-      orderBy: { createdAt: "asc" },
-      select: { slug: true },
-    });
-    return tenant?.slug ?? null;
-  } catch {
-    return null;
-  }
-}
+import { getDemoSlug } from "@/lib/tenant/demo";
 
 const steps = [
   {
