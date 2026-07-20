@@ -15,7 +15,7 @@ export default async function EmbedPage({
     notFound();
   }
 
-  const [services, location] = await Promise.all([
+  const [services, location, faqEntries] = await Promise.all([
     prisma.service.findMany({
       where: { tenantId: tenant.id },
       select: { id: true, name: true },
@@ -24,6 +24,14 @@ export default async function EmbedPage({
     prisma.location.findFirst({
       where: { tenantId: tenant.id },
       select: { emergencyPhone: true, emergencyNote: true, serviceAreaPostcodes: true },
+    }),
+    // The business's own FAQ entries double as the suggested questions in the
+    // widget — sortOrder is the order the business put them in.
+    prisma.faqEntry.findMany({
+      where: { tenantId: tenant.id },
+      select: { question: true },
+      orderBy: { sortOrder: "asc" },
+      take: 5,
     }),
   ]);
 
@@ -35,6 +43,7 @@ export default async function EmbedPage({
       emergencyPhone={location?.emergencyPhone ?? null}
       emergencyNote={location?.emergencyNote ?? null}
       hasServiceArea={(location?.serviceAreaPostcodes.length ?? 0) > 0}
+      topQuestions={faqEntries.map((e) => e.question)}
     />
   );
 }

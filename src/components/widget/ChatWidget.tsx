@@ -10,6 +10,7 @@ interface WidgetService {
 type Mode = "consultation" | "booking";
 type Step =
   | "welcome"
+  | "faq"
   | "service"
   | "flaeche"
   | "situation"
@@ -84,6 +85,7 @@ const emptyData: WidgetData = { fotos: [] };
 const PROMPTS: Record<Step, string> = {
   welcome:
     "Ich nehme Ihre Anfrage in wenigen Schritten auf — Sie bekommen zeitnah eine persönliche Rückmeldung.\n\nWie möchten Sie starten?",
+  faq: "Fragen Sie mich, was Sie wissen möchten — tippen Sie einfach los oder wählen Sie eine der häufigen Fragen.",
   service: "Um welche Leistung geht es?",
   flaeche: "Wie groß ist die Fläche ungefähr? Eine grobe Schätzung genügt.",
   situation: "Beschreiben Sie kurz Ihre Situation. Je mehr wir wissen, desto besser können wir vorbereiten.",
@@ -164,6 +166,19 @@ const dateLabel = (iso: string) =>
     month: "long",
   });
 
+/**
+ * Shown as one-tap suggestions when the business has not written its own FAQ
+ * entries yet. These are deliberately the topics the rule engine can answer from
+ * the business profile alone, so they work even without an AI key configured.
+ */
+const DEFAULT_QUESTIONS = [
+  "Wann haben Sie geöffnet?",
+  "Welche Leistungen bieten Sie an?",
+  "Wo finde ich Sie?",
+  "Wie erreiche ich Sie?",
+  "Was kostet ein Einsatz?",
+];
+
 export function ChatWidget({
   tenantSlug,
   tenantName,
@@ -171,6 +186,7 @@ export function ChatWidget({
   emergencyPhone,
   emergencyNote,
   hasServiceArea,
+  topQuestions,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -178,6 +194,7 @@ export function ChatWidget({
   emergencyPhone?: string | null;
   emergencyNote?: string | null;
   hasServiceArea?: boolean;
+  topQuestions?: string[];
 }) {
   const reduceMotion = useMemo(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -277,7 +294,9 @@ export function ChatWidget({
     if (done) return 100;
     const path = pathFor(mode);
     const idx = path.indexOf(current);
-    if (current === "welcome") return 4;
+    // "faq" is a side path off the welcome screen, not a step on the way to a
+    // request — it is not in pathFor(), so keep the bar where it was.
+    if (current === "welcome" || current === "faq") return 4;
     return Math.max(4, Math.min(100, Math.round((idx / (path.length - 1)) * 100)));
   }, [mode, current, done]);
 
@@ -359,9 +378,14 @@ export function ChatWidget({
     setCurrent("service");
   }
 
-  async function askFaq(e: React.FormEvent) {
+  function askFaq(e: React.FormEvent) {
     e.preventDefault();
-    const question = faqInput.trim();
+    void submitFaq(faqInput);
+  }
+
+  /** Shared by the input box and the one-tap suggested questions. */
+  async function submitFaq(raw: string) {
+    const question = raw.trim();
     if (question.length < 2 || faqBusy) return;
 
     setFaqBusy(true);
@@ -479,6 +503,9 @@ export function ChatWidget({
 
   // ---- render helpers ----
   const serviceChips = [...services, { id: "__other__", name: "Etwas anderes" }];
+  // The business's own FAQ entries come first; top up with the always-answerable
+  // defaults so there are five one-tap questions even for a thin profile.
+  const suggestions = Array.from(new Set([...(topQuestions ?? []), ...DEFAULT_QUESTIONS])).slice(0, 5);
 
   function renderDock() {
     switch (current) {
@@ -486,29 +513,14 @@ export function ChatWidget({
         return (
           <div className="kt-choice">
             {/* Ask first, commit later — most visitors just have a question. */}
-            <form className="kt-ask" onSubmit={askFaq}>
-              <input
-                type="text"
-                className="kt-ask-in"
-                placeholder="Frage stellen — z. B. „Wann haben Sie geöffnet?“"
-                value={faqInput}
-                onChange={(e) => setFaqInput(e.target.value)}
-                disabled={faqBusy}
-                aria-label="Frage an den Betrieb"
-              />
-              <button
-                type="submit"
-                className="kt-ask-go"
-                disabled={faqBusy || faqInput.trim().length < 2}
-                aria-label="Frage absenden"
-              >
-                {faqBusy ? <span className="kt-spin" /> : IconSend}
-              </button>
-            </form>
-
-            <div className="kt-or">
-              <span>oder</span>
-            </div>
+            <button className="kt-card" onClick={() => setCurrent("faq")} type="button">
+              <span className="kt-ic">{IconHelp}</span>
+              <span className="kt-ct">
+                <b>Häufige Fragen</b>
+                <span>Öffnungszeiten, Leistungen, Anfahrt — sofort beantwortet.</span>
+              </span>
+              <span className="kt-chev">{IconChevron}</span>
+            </button>
 
             <button
               className="kt-card"
@@ -544,6 +556,53 @@ export function ChatWidget({
                 <span className="kt-chev">{IconChevron}</span>
               </button>
             )}
+          </div>
+        );
+
+      case "faq":
+        return (
+          <div className="kt-faqdock">
+            {suggestions.length > 0 && (
+              <div className="kt-sugg">
+                {suggestions.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    className="kt-sugg-q"
+                    onClick={() => void submitFaq(q)}
+                    disabled={faqBusy}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <form className="kt-ask" onSubmit={askFaq}>
+              <input
+                type="text"
+                className="kt-ask-in"
+                placeholder="Eigene Frage stellen …"
+                value={faqInput}
+                onChange={(e) => setFaqInput(e.target.value)}
+                disabled={faqBusy}
+                aria-label="Eigene Frage an den Betrieb"
+              />
+              <button
+                type="submit"
+                className="kt-ask-go"
+                disabled={faqBusy || faqInput.trim().length < 2}
+                aria-label="Frage absenden"
+              >
+                {faqBusy ? <span className="kt-spin" /> : IconSend}
+              </button>
+            </form>
+
+            <div className="kt-back">
+              <button type="button" className="kt-link" onClick={() => setCurrent("welcome")}>
+                ← Zurück zum Menü
+              </button>
+            </div>
           </div>
         );
 
@@ -1268,6 +1327,13 @@ const IconCalendar = (
     <path d="M16 2v4M8 2v4M3 10h18" />
   </svg>
 );
+const IconHelp = (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.2 9.3a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.4-2.8 4" />
+    <path d="M12 17.6h.01" />
+  </svg>
+);
 const IconChevron = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
     <path d="m9 18 6-6-6-6" />
@@ -1463,7 +1529,12 @@ const CSS = `
 .kt-ref { font-size: 12px; color: var(--ink-soft); background: var(--panel-2); border: 1px solid var(--line); padding: 0.4rem 0.7rem; border-radius: 9px; font-variant-numeric: tabular-nums; }
 .kt-ref b { color: var(--ink); letter-spacing: 0.04em; }
 
-/* ---- FAQ ask box (sits above the two paths) ---- */
+/* ---- FAQ: one-tap suggestions above a free-text ask box ---- */
+.kt-faqdock { display: flex; flex-direction: column; gap: 0.6rem; }
+.kt-sugg { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.kt-sugg-q { text-align: left; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); border-radius: 999px; padding: 0.5rem 0.8rem; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s; }
+.kt-sugg-q:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel-2)); }
+.kt-sugg-q:disabled { opacity: 0.5; cursor: not-allowed; }
 .kt-ask { display: flex; gap: 0.4rem; align-items: center; }
 .kt-ask-in { flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); border-radius: 11px; padding: 0.62rem 0.75rem; font: inherit; font-size: 13px; outline: none; transition: border-color 0.15s; }
 .kt-ask-in::placeholder { color: var(--ink-faint); }
@@ -1474,10 +1545,6 @@ const CSS = `
 .kt-ask-go:disabled { opacity: 0.4; cursor: not-allowed; }
 .kt-spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: kt-rot 0.6s linear infinite; }
 @keyframes kt-rot { to { transform: rotate(360deg); } }
-
-.kt-or { display: flex; align-items: center; gap: 0.6rem; margin: 0.15rem 0; }
-.kt-or::before, .kt-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.kt-or span { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
 
 .kt-inline-cta { display: block; margin-top: 0.5rem; background: none; border: none; padding: 0; color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
