@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { resolveTenantBySlug } from "@/lib/tenant/resolve";
 import { ChatWidget } from "@/components/widget/ChatWidget";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function EmbedPage({
   params,
@@ -14,6 +15,8 @@ export default async function EmbedPage({
   if (!tenant) {
     notFound();
   }
+
+  const locale = await getLocale();
 
   const [services, location, faqEntries] = await Promise.all([
     prisma.service.findMany({
@@ -44,6 +47,7 @@ export default async function EmbedPage({
       emergencyNote={location?.emergencyNote ?? null}
       hasServiceArea={(location?.serviceAreaPostcodes.length ?? 0) > 0}
       topQuestions={faqEntries.map((e) => e.question)}
+      initialLocale={locale}
     />
   );
 }

@@ -1,6 +1,16 @@
 import { formatInTimeZone } from "date-fns-tz";
-import { de } from "date-fns/locale";
+import { de as deDF, enGB as enDF, tr as trDF, pl as plDF, ru as ruDF } from "date-fns/locale";
 import { prisma } from "@/lib/db";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import { type Locale } from "@/lib/i18n/config";
+
+const DATE_FNS_LOCALES: Record<Locale, typeof deDF> = {
+  de: deDF,
+  en: enDF,
+  tr: trDF,
+  pl: plDF,
+  ru: ruDF,
+};
 
 type TimeWindow = { start: string; end: string };
 type WeekdayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -35,8 +45,9 @@ export interface FaqContext {
   closures: string[];
 }
 
-/** Everything the assistant knows about one business. */
-export async function loadFaqContext(tenantId: string): Promise<FaqContext> {
+/** Everything the assistant knows about one business, formatted for `locale`. */
+export async function loadFaqContext(tenantId: string, locale: Locale = "de"): Promise<FaqContext> {
+  const t = dictionaries[locale].faq;
   const [tenant, location, services, entries, absences] = await Promise.all([
     prisma.tenant.findUniqueOrThrow({ where: { id: tenantId }, select: { name: true } }),
     prisma.location.findFirstOrThrow({ where: { tenantId } }),
@@ -61,19 +72,21 @@ export async function loadFaqContext(tenantId: string): Promise<FaqContext> {
   const openingHours = location.openingHours as OpeningHours;
 
   const hoursLines: string[] = [];
-  for (const [key, label] of WEEKDAY_LABELS) {
+  WEEKDAY_LABELS.forEach(([key], i) => {
     const windows = openingHours[key] ?? [];
-    if (windows.length === 0) continue;
-    const times = windows.map((w) => `${w.start}–${w.end} Uhr`).join(", ");
-    hoursLines.push(`${label}: ${times}`);
-  }
+    if (windows.length === 0) return;
+    const suffix = t.clock ? ` ${t.clock}` : "";
+    const times = windows.map((w) => `${w.start}–${w.end}${suffix}`).join(", ");
+    hoursLines.push(`${t.weekdays[i]}: ${times}`);
+  });
 
-  const fmtDay = (d: Date) => formatInTimeZone(d, "UTC", "d. MMMM yyyy", { locale: de });
+  const dfLocale = DATE_FNS_LOCALES[locale];
+  const fmtDay = (d: Date) => formatInTimeZone(d, "UTC", "d MMMM yyyy", { locale: dfLocale });
   const closures = absences.map((a) => {
     const range =
       a.startDate.getTime() === a.endDate.getTime()
         ? fmtDay(a.startDate)
-        : `${fmtDay(a.startDate)} bis ${fmtDay(a.endDate)}`;
+        : `${fmtDay(a.startDate)} – ${fmtDay(a.endDate)}`;
     return a.reason ? `${range} (${a.reason})` : range;
   });
 
@@ -95,8 +108,8 @@ export async function loadFaqContext(tenantId: string): Promise<FaqContext> {
   };
 }
 
-export function formatPrice(cents: number): string {
-  return `${(cents / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`;
+export function formatPrice(cents: number, localeTag = "de-DE"): string {
+  return `${(cents / 100).toLocaleString(localeTag, { minimumFractionDigits: 2 })} €`;
 }
 
 /** Compact plain-text brief of the business — fed to the AI as system context. */

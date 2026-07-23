@@ -1,4 +1,6 @@
 import { contextToBrief, formatPrice, type FaqContext } from "@/lib/faq/context";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
 
 export interface RuleAnswer {
   answer: string;
@@ -37,11 +39,16 @@ function stem(word: string): string {
  * cost, instant. Returns null when nothing matches, so the caller can fall back
  * to the AI (or to offering a callback).
  */
-export function answerByRules(question: string, ctx: FaqContext): RuleAnswer | null {
+export function answerByRules(question: string, ctx: FaqContext, locale: Locale = "de"): RuleAnswer | null {
   const q = normalize(question);
   if (q.length < 2) return null;
 
-  // 1) The business's own entries win — they are the most specific.
+  const t = dictionaries[locale].faq;
+  const localeTag = dictionaries[locale].widget.localeTag;
+  const kw = t.keywords;
+
+  // 1) The business's own entries win — they are the most specific. Matched by
+  //    the keywords/wording the business typed, so language-agnostic in mechanism.
   for (const entry of ctx.entries) {
     const keywordStems = (entry.keywords ?? "")
       .split(",")
@@ -64,98 +71,76 @@ export function answerByRules(question: string, ctx: FaqContext): RuleAnswer | n
   }
 
   // 2) Opening hours
-  if (
-    hasAny(q, [
-      "offnungszeit", "offnungszeiten", "geoffnet", "offen ", "auf haben", "wann offen",
-      "wann geoffnet", "wann macht", "wann habt", "wann haben sie", "sprechzeit", "wie lange offen",
-      "samstag", "sonntag", "wochenende", "feiertag",
-    ])
-  ) {
+  if (hasAny(q, kw.hours)) {
     if (ctx.hoursLines.length === 0) {
       return null; // nothing stored — let the AI or the fallback handle it
     }
-    let answer = `Unsere Öffnungszeiten:\n${ctx.hoursLines.join("\n")}`;
-    if (q.includes("samstag") && !ctx.hoursLines.some((l) => l.startsWith("Samstag"))) {
-      answer = `Samstags haben wir geschlossen.\n\nUnsere Öffnungszeiten:\n${ctx.hoursLines.join("\n")}`;
-    }
-    if (q.includes("sonntag") && !ctx.hoursLines.some((l) => l.startsWith("Sonntag"))) {
-      answer = `Sonntags haben wir geschlossen.\n\nUnsere Öffnungszeiten:\n${ctx.hoursLines.join("\n")}`;
-    }
+    let answer = `${t.hoursHeading}\n${ctx.hoursLines.join("\n")}`;
     if (ctx.closures.length > 0) {
-      answer += `\n\nGeschlossen: ${ctx.closures.join("; ")}`;
+      answer += `\n\n${t.closedPrefix} ${ctx.closures.join("; ")}`;
     }
     return { answer, topic: "hours" };
   }
 
   // 3) Emergency / out-of-hours
-  if (hasAny(q, ["notdienst", "notfall", "notruf", "dringend", "sofort", "rohrbruch", "wasserschaden"])) {
+  if (hasAny(q, kw.emergency)) {
     if (ctx.emergencyPhone) {
       const note = ctx.emergencyNote ? ` ${ctx.emergencyNote}` : "";
-      return {
-        answer: `Im Notfall erreichen Sie uns unter ${ctx.emergencyPhone}.${note}`,
-        topic: "emergency",
-      };
+      return { answer: t.emergencyLine(ctx.emergencyPhone, note), topic: "emergency" };
     }
     if (ctx.phone) {
-      return {
-        answer: `Bei dringenden Fällen rufen Sie uns bitte direkt an: ${ctx.phone}.`,
-        topic: "emergency",
-      };
+      return { answer: t.emergencyViaPhone(ctx.phone), topic: "emergency" };
     }
     return null;
   }
 
   // 4) Address / location
-  if (hasAny(q, ["adresse", "anschrift", "wo sind", "wo seid", "wo finde", "wo befindet", "standort", "sitz", "anfahrt", "wo ist"])) {
+  if (hasAny(q, kw.address)) {
     if (!ctx.address) return null;
-    return { answer: `Sie finden uns hier:\n${ctx.address}`, topic: "address" };
+    return { answer: `${t.addressHeading}\n${ctx.address}`, topic: "address" };
   }
 
   // 5) Phone / contact
-  if (hasAny(q, ["telefon", "telefonnummer", "nummer", "anrufen", "durchwahl", "erreichbar", "kontakt", "handy"])) {
+  if (hasAny(q, kw.contact)) {
     const bits: string[] = [];
-    if (ctx.phone) bits.push(`Telefon: ${ctx.phone}`);
-    if (ctx.email) bits.push(`E-Mail: ${ctx.email}`);
-    if (ctx.emergencyPhone) bits.push(`Notdienst: ${ctx.emergencyPhone}`);
+    if (ctx.phone) bits.push(`${t.labelPhone}: ${ctx.phone}`);
+    if (ctx.email) bits.push(`${t.labelEmail}: ${ctx.email}`);
+    if (ctx.emergencyPhone) bits.push(`${t.labelEmergency}: ${ctx.emergencyPhone}`);
     if (bits.length === 0) return null;
-    return { answer: `So erreichen Sie uns:\n${bits.join("\n")}`, topic: "contact" };
+    return { answer: `${t.contactHeading}\n${bits.join("\n")}`, topic: "contact" };
   }
 
   // 6) E-Mail specifically
-  if (hasAny(q, ["email", "e mail", "mailadresse", "mail schreiben"])) {
+  if (hasAny(q, kw.email)) {
     if (!ctx.email) return null;
-    return { answer: `Sie erreichen uns per E-Mail unter ${ctx.email}.`, topic: "email" };
+    return { answer: t.emailLine(ctx.email), topic: "email" };
   }
 
   // 7) Prices
-  if (hasAny(q, ["preis", "kostet", "kosten", "teuer", "gunstig", "angebot", "kostenvoranschlag", "was zahle"])) {
+  if (hasAny(q, kw.price)) {
     const priced = ctx.services.filter((s) => s.priceCents != null);
     if (priced.length === 0) {
-      return {
-        answer:
-          "Die Kosten hängen vom Aufwand ab. Schildern Sie uns kurz Ihr Anliegen — am besten mit Foto — dann melden wir uns mit einem konkreten Angebot.",
-        topic: "price",
-      };
+      return { answer: t.priceNone, topic: "price" };
     }
-    const lines = priced.map((s) => `${s.name}: ab ${formatPrice(s.priceCents!)}`);
+    const lines = priced.map((s) => `${s.name}: ${t.from} ${formatPrice(s.priceCents!, localeTag)}`);
     return {
-      answer: `Unsere Richtpreise:\n${lines.join("\n")}\n\nDer genaue Preis hängt vom Aufwand ab — wir melden uns mit einem konkreten Angebot.`,
+      answer: `${t.priceHeading}\n${lines.join("\n")}\n\n${t.priceFooter}`,
       topic: "price",
     };
   }
 
   // 8) Services offered
-  if (hasAny(q, ["leistung", "leistungen", "machen sie", "macht ihr", "bieten sie", "bietet ihr", "angebot", "konnen sie", "konnt ihr", "ubernehmen sie", "reparieren", "einbauen", "montieren"])) {
+  if (hasAny(q, kw.services)) {
     if (ctx.services.length === 0) return null;
     const names = ctx.services.map((s) => `• ${s.name}`);
-    return { answer: `Wir bieten:\n${names.join("\n")}`, topic: "services" };
+    return { answer: `${t.servicesHeading}\n${names.join("\n")}`, topic: "services" };
   }
 
   // 9) Service area
-  if (hasAny(q, ["einzugsgebiet", "kommen sie", "kommt ihr", "fahren sie", "gebiet", "umkreis", "postleitzahl", "wohne in", "auch nach"])) {
+  if (hasAny(q, kw.area)) {
     if (ctx.serviceAreaPostcodes.length === 0) return null;
     return {
-      answer: `Wir arbeiten in diesen Postleitzahlen: ${ctx.serviceAreaPostcodes.join(", ")}.\n\nGeben Sie im Termin-Assistenten einfach Ihre Postleitzahl ein — dann sagen wir Ihnen sofort, ob wir zu Ihnen kommen.`,
+      answer: `${t.areaLine(ctx.serviceAreaPostcodes.join(", "))}\n\n${t.areaHint}`,
       topic: "area",
     };
   }

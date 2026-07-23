@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, type Locale } from "@/lib/i18n/config";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 
 interface WidgetService {
   id: string;
@@ -73,7 +76,6 @@ interface FaqTurn {
 
 type PlzState = null | { checking: true } | { checking: false; covered: boolean; checked: boolean };
 
-const WEEKDAY_LABELS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const monthKey = (dateStr: string) => {
   const [y, m] = dateStr.split("-").map(Number);
@@ -81,20 +83,6 @@ const monthKey = (dateStr: string) => {
 };
 
 const emptyData: WidgetData = { fotos: [] };
-
-const PROMPTS: Record<Step, string> = {
-  welcome:
-    "Ich nehme Ihre Anfrage in wenigen Schritten auf — Sie bekommen zeitnah eine persönliche Rückmeldung.\n\nWie möchten Sie starten?",
-  faq: "Fragen Sie mich, was Sie wissen möchten — tippen Sie einfach los oder wählen Sie eine der häufigen Fragen.",
-  service: "Um welche Leistung geht es?",
-  flaeche: "Wie groß ist die Fläche ungefähr? Eine grobe Schätzung genügt.",
-  situation: "Beschreiben Sie kurz Ihre Situation. Je mehr wir wissen, desto besser können wir vorbereiten.",
-  fotos: "Haben Sie ein paar Fotos? Das hilft uns enorm, den Aufwand richtig einzuschätzen. (optional)",
-  ort: "Wo soll die Arbeit ausgeführt werden?",
-  termin: "Wann würde es Ihnen am besten passen? Wählen Sie einen freien Tag und eine freie Uhrzeit.",
-  kontakt: "Zum Schluss: Wie erreichen wir Sie?",
-  summary: "Bitte prüfen Sie Ihre Angaben — dann schicke ich alles direkt an den Betrieb.",
-};
 
 function nextStep(step: Step, mode: Mode | null): Step | null {
   switch (step) {
@@ -159,25 +147,12 @@ async function compressImage(file: File, max = 1280, quality = 0.7): Promise<str
   }
 }
 
-const dateLabel = (iso: string) =>
-  new Date(`${iso}T00:00`).toLocaleDateString("de-DE", {
+const dateLabel = (iso: string, localeTag: string) =>
+  new Date(`${iso}T00:00`).toLocaleDateString(localeTag, {
     weekday: "short",
     day: "2-digit",
     month: "long",
   });
-
-/**
- * Shown as one-tap suggestions when the business has not written its own FAQ
- * entries yet. These are deliberately the topics the rule engine can answer from
- * the business profile alone, so they work even without an AI key configured.
- */
-const DEFAULT_QUESTIONS = [
-  "Wann haben Sie geöffnet?",
-  "Welche Leistungen bieten Sie an?",
-  "Wo finde ich Sie?",
-  "Wie erreiche ich Sie?",
-  "Was kostet ein Einsatz?",
-];
 
 export function ChatWidget({
   tenantSlug,
@@ -187,6 +162,7 @@ export function ChatWidget({
   emergencyNote,
   hasServiceArea,
   topQuestions,
+  initialLocale,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -195,12 +171,26 @@ export function ChatWidget({
   emergencyNote?: string | null;
   hasServiceArea?: boolean;
   topQuestions?: string[];
+  initialLocale: Locale;
 }) {
   const reduceMotion = useMemo(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     []
   );
   const monogram = tenantName.trim().charAt(0).toUpperCase() || "?";
+
+  // Language: seeded from the cookie on the server, switchable live in the
+  // widget. Changing it writes the cookie so the choice sticks on reload.
+  const [locale, setLocale] = useState<Locale>(initialLocale);
+  const t = dictionaries[locale].widget;
+  function changeLocale(next: Locale) {
+    setLocale(next);
+    try {
+      document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax`;
+    } catch {
+      // ignore storage errors
+    }
+  }
 
   const [mode, setMode] = useState<Mode | null>(null);
   const [current, setCurrent] = useState<Step>("welcome");
@@ -374,7 +364,7 @@ export function ChatWidget({
   function chooseEmergency() {
     setEmergency(true);
     setMode("booking");
-    setFlow((prev) => [...prev, { step: "welcome", text: "Notfall" }]);
+    setFlow((prev) => [...prev, { step: "welcome", text: t.pathEmergency }]);
     setCurrent("service");
   }
 
@@ -394,7 +384,7 @@ export function ChatWidget({
       const res = await fetch("/api/faq", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantSlug, question }),
+        body: JSON.stringify({ tenantSlug, question, lang: locale }),
       });
       if (!res.ok) throw new Error("faq_failed");
       const json = await res.json();
@@ -407,7 +397,7 @@ export function ChatWidget({
         ...prev,
         {
           question,
-          answer: "Das konnte ich gerade nicht nachschlagen. Fragen Sie es gern direkt beim Betrieb an.",
+          answer: t.faqError,
           needsHuman: true,
         },
       ]);
@@ -495,17 +485,17 @@ export function ChatWidget({
       setReference(json.reference ?? "—");
       setManageUrl(json.manageUrl ?? null);
     } catch {
-      setFormError("Die Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut.");
+      setFormError(t.submitError);
     } finally {
       setSubmitting(false);
     }
   }
 
   // ---- render helpers ----
-  const serviceChips = [...services, { id: "__other__", name: "Etwas anderes" }];
+  const serviceChips = [...services, { id: "__other__", name: t.serviceOther }];
   // The business's own FAQ entries come first; top up with the always-answerable
   // defaults so there are five one-tap questions even for a thin profile.
-  const suggestions = Array.from(new Set([...(topQuestions ?? []), ...DEFAULT_QUESTIONS])).slice(0, 5);
+  const suggestions = Array.from(new Set([...(topQuestions ?? []), ...t.defaultQuestions])).slice(0, 5);
 
   function renderDock() {
     switch (current) {
@@ -516,29 +506,29 @@ export function ChatWidget({
             <button className="kt-card" onClick={() => setCurrent("faq")} type="button">
               <span className="kt-ic">{IconHelp}</span>
               <span className="kt-ct">
-                <b>Häufige Fragen</b>
-                <span>Öffnungszeiten, Leistungen, Anfahrt — sofort beantwortet.</span>
+                <b>{t.menu.faqTitle}</b>
+                <span>{t.menu.faqDesc}</span>
               </span>
               <span className="kt-chev">{IconChevron}</span>
             </button>
 
             <button
               className="kt-card"
-              onClick={() => chooseMode("consultation", "Beratung / Rückruf")}
+              onClick={() => chooseMode("consultation", t.pathConsult)}
               type="button"
             >
               <span className="kt-ic">{IconChat}</span>
               <span className="kt-ct">
-                <b>Beratung / Rückruf</b>
-                <span>Fragen klären, Kostenvoranschlag oder erst besprechen.</span>
+                <b>{t.menu.consultTitle}</b>
+                <span>{t.menu.consultDesc}</span>
               </span>
               <span className="kt-chev">{IconChevron}</span>
             </button>
-            <button className="kt-card" onClick={() => chooseMode("booking", "Termin buchen")} type="button">
+            <button className="kt-card" onClick={() => chooseMode("booking", t.pathBooking)} type="button">
               <span className="kt-ic">{IconCalendar}</span>
               <span className="kt-ct">
-                <b>Termin buchen</b>
-                <span>Sie wissen, was gemacht werden soll — Vor-Ort-Termin.</span>
+                <b>{t.menu.bookingTitle}</b>
+                <span>{t.menu.bookingDesc}</span>
               </span>
               <span className="kt-chev">{IconChevron}</span>
             </button>
@@ -547,9 +537,9 @@ export function ChatWidget({
               <button className="kt-card kt-sos" onClick={chooseEmergency} type="button">
                 <span className="kt-ic">{IconAlert}</span>
                 <span className="kt-ct">
-                  <b>Notfall</b>
+                  <b>{t.menu.emergencyTitle}</b>
                   <span>
-                    Sofort anrufen: {emergencyPhone}
+                    {t.menu.emergencyCall}: {emergencyPhone}
                     {emergencyNote ? ` — ${emergencyNote}` : ""}
                   </span>
                 </span>
@@ -582,17 +572,17 @@ export function ChatWidget({
               <input
                 type="text"
                 className="kt-ask-in"
-                placeholder="Eigene Frage stellen …"
+                placeholder={t.faqPlaceholder}
                 value={faqInput}
                 onChange={(e) => setFaqInput(e.target.value)}
                 disabled={faqBusy}
-                aria-label="Eigene Frage an den Betrieb"
+                aria-label={t.faqAria}
               />
               <button
                 type="submit"
                 className="kt-ask-go"
                 disabled={faqBusy || faqInput.trim().length < 2}
-                aria-label="Frage absenden"
+                aria-label={t.faqSend}
               >
                 {faqBusy ? <span className="kt-spin" /> : IconSend}
               </button>
@@ -600,7 +590,7 @@ export function ChatWidget({
 
             <div className="kt-back">
               <button type="button" className="kt-link" onClick={() => setCurrent("welcome")}>
-                ← Zurück zum Menü
+                {t.faqBackToMenu}
               </button>
             </div>
           </div>
@@ -631,10 +621,10 @@ export function ChatWidget({
         );
 
       case "flaeche": {
-        const quick = ["bis 5 m²", "5–15 m²", "15–30 m²", "über 30 m²", "weiß ich nicht"];
+        const quick = t.flaecheQuick;
         return (
           <div className="kt-field">
-            <p className="kt-hint">Wählen Sie einen Bereich oder geben Sie die Fläche ein:</p>
+            <p className="kt-hint">{t.flaecheHint}</p>
             <div className="kt-chips" style={{ pointerEvents: pending ? "none" : "auto" }}>
               {quick.map((q) => (
                 <button
@@ -656,7 +646,7 @@ export function ChatWidget({
                 type="number"
                 min="0"
                 inputMode="decimal"
-                placeholder="z. B. 12"
+                placeholder={t.flaechePlaceholder}
                 value={data.flaecheNum ?? ""}
                 onChange={(e) => patch({ flaecheNum: e.target.value })}
                 style={{ paddingRight: "2.6rem" }}
@@ -675,7 +665,7 @@ export function ChatWidget({
                   answer("flaeche", label);
                 }}
               >
-                Weiter
+                {t.next}
               </button>
             </div>
           </div>
@@ -687,7 +677,7 @@ export function ChatWidget({
           <div className="kt-field">
             <textarea
               className="kt-inp kt-ta"
-              placeholder="z. B. Altes Bad komplett erneuern, Fliesen und Sanitär raus, barrierefreie Dusche gewünscht …"
+              placeholder={t.situationPlaceholder}
               value={data.situation ?? ""}
               onChange={(e) => patch({ situation: e.target.value })}
             />
@@ -695,9 +685,9 @@ export function ChatWidget({
               <button
                 type="button"
                 className="kt-btn kt-primary"
-                onClick={() => answer("situation", (data.situation ?? "").trim() || "Keine Beschreibung")}
+                onClick={() => answer("situation", (data.situation ?? "").trim() || t.situationNone)}
               >
-                Weiter
+                {t.next}
               </button>
             </div>
           </div>
@@ -708,8 +698,8 @@ export function ChatWidget({
           <div className="kt-field">
             <label className="kt-drop">
               {IconUpload}
-              <b>Fotos hinzufügen</b>
-              <span>tippen zum Auswählen · JPG, PNG · bis zu 6</span>
+              <b>{t.fotosAdd}</b>
+              <span>{t.fotosHint}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -726,11 +716,11 @@ export function ChatWidget({
                 {data.fotos.map((src, i) => (
                   <div key={i} className="kt-thumb">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt={`Foto ${i + 1}`} />
+                    <img src={src} alt={t.fotoAlt(i + 1)} />
                     <button
                       type="button"
                       className="kt-x"
-                      aria-label="Foto entfernen"
+                      aria-label={t.fotosRemove}
                       onClick={() => setData((prev) => ({ ...prev, fotos: prev.fotos.filter((_, j) => j !== i) }))}
                     >
                       ×
@@ -744,9 +734,9 @@ export function ChatWidget({
                 <button
                   type="button"
                   className="kt-btn kt-ghost"
-                  onClick={() => answer("fotos", "Keine Fotos")}
+                  onClick={() => answer("fotos", t.fotosNone)}
                 >
-                  Überspringen
+                  {t.fotosSkip}
                 </button>
               )}
               <button
@@ -754,10 +744,10 @@ export function ChatWidget({
                 className="kt-btn kt-primary"
                 onClick={() => {
                   const n = data.fotos.length;
-                  answer("fotos", n ? `${n} ${n === 1 ? "Foto" : "Fotos"} hinzugefügt` : "Keine Fotos");
+                  answer("fotos", n ? t.fotosAdded(n) : t.fotosNone);
                 }}
               >
-                {data.fotos.length ? `Weiter (${data.fotos.length})` : "Weiter"}
+                {data.fotos.length ? t.nextWithCount(data.fotos.length) : t.next}
               </button>
             </div>
           </div>
@@ -766,17 +756,17 @@ export function ChatWidget({
       case "ort":
         return (
           <div className="kt-field">
-            <label className="kt-lab">Adresse</label>
+            <label className="kt-lab">{t.ortLabel}</label>
             <input
               className="kt-inp"
-              placeholder="Straße und Hausnummer"
+              placeholder={t.ortStreet}
               value={data.strasse ?? ""}
               onChange={(e) => patch({ strasse: e.target.value })}
             />
             <div className="kt-row-plz">
               <input
                 className={`kt-inp${invalid.includes("plz") ? " err" : ""}`}
-                placeholder="PLZ"
+                placeholder={t.ortPlz}
                 inputMode="numeric"
                 maxLength={5}
                 value={plz}
@@ -790,7 +780,7 @@ export function ChatWidget({
               />
               <input
                 className={`kt-inp${invalid.includes("ort") ? " err" : ""}`}
-                placeholder="Ort"
+                placeholder={t.ortCity}
                 value={data.ort ?? ""}
                 onChange={(e) => {
                   patch({ ort: e.target.value });
@@ -799,19 +789,16 @@ export function ChatWidget({
               />
             </div>
 
-            {invalid.includes("plz") && <div className="kt-err">Bitte geben Sie eine fünfstellige PLZ an.</div>}
-            {invalid.includes("ort") && <div className="kt-err">Bitte geben Sie den Ort an.</div>}
+            {invalid.includes("plz") && <div className="kt-err">{t.ortErrPlz}</div>}
+            {invalid.includes("ort") && <div className="kt-err">{t.ortErrCity}</div>}
 
             {/* Tell the customer right away whether we even travel there. */}
-            {plzState?.checking && <div className="kt-hint">Einzugsgebiet wird geprüft …</div>}
+            {plzState?.checking && <div className="kt-hint">{t.ortChecking}</div>}
             {plzState && !plzState.checking && plzState.checked && plzState.covered && (
-              <div className="kt-ok">✓ Sehr gut — zu Ihnen kommen wir.</div>
+              <div className="kt-ok">{t.ortCovered}</div>
             )}
             {plzState && !plzState.checking && plzState.checked && !plzState.covered && (
-              <div className="kt-warn">
-                Diese Postleitzahl liegt außerhalb unseres üblichen Einzugsgebiets. Sie können die Anfrage
-                trotzdem senden — wir melden uns und sagen Ihnen ehrlich, ob wir es einrichten können.
-              </div>
+              <div className="kt-warn">{t.ortNotCovered}</div>
             )}
 
             <div className="kt-actions">
@@ -833,7 +820,7 @@ export function ChatWidget({
                   answer("ort", full);
                 }}
               >
-                Weiter
+                {t.next}
               </button>
             </div>
           </div>
@@ -848,13 +835,13 @@ export function ChatWidget({
             <div className="kt-row2">
               <input
                 className={`kt-inp${invalid.includes("vorname") ? " err" : ""}`}
-                placeholder="Vorname"
+                placeholder={t.firstName}
                 value={data.vorname ?? ""}
                 onChange={(e) => patch({ vorname: e.target.value })}
               />
               <input
                 className={`kt-inp${invalid.includes("nachname") ? " err" : ""}`}
-                placeholder="Nachname"
+                placeholder={t.lastName}
                 value={data.nachname ?? ""}
                 onChange={(e) => patch({ nachname: e.target.value })}
               />
@@ -862,14 +849,14 @@ export function ChatWidget({
             <input
               className={`kt-inp${invalid.includes("email") ? " err" : ""}`}
               type="email"
-              placeholder="E-Mail-Adresse"
+              placeholder={t.email}
               value={data.email ?? ""}
               onChange={(e) => patch({ email: e.target.value })}
             />
             <input
               className={`kt-inp${invalid.includes("telefon") ? " err" : ""}`}
               type="tel"
-              placeholder="Telefonnummer"
+              placeholder={t.phone}
               value={data.telefon ?? ""}
               onChange={(e) => patch({ telefon: e.target.value })}
             />
@@ -886,7 +873,7 @@ export function ChatWidget({
                   if ((data.telefon ?? "").replace(/[^\d]/g, "").length < 6) bad.push("telefon");
                   if (bad.length) {
                     setInvalid(bad);
-                    setFormError("Bitte prüfen Sie die markierten Felder.");
+                    setFormError(t.fixFields);
                     return;
                   }
                   setInvalid([]);
@@ -898,7 +885,7 @@ export function ChatWidget({
                   );
                 }}
               >
-                Anfrage prüfen
+                {t.reviewCta}
               </button>
             </div>
           </div>
@@ -919,7 +906,7 @@ export function ChatWidget({
           {notice && <div className="kt-notice">{notice}</div>}
           <div className="kt-loading">
             <span className="kt-spin" />
-            Freie Termine werden geladen …
+            {t.terminLoading}
           </div>
         </div>
       );
@@ -934,10 +921,10 @@ export function ChatWidget({
               className="kt-btn kt-primary"
               onClick={() => {
                 setAvailError(null);
-                setAvailReloadToken((t) => t + 1);
+                setAvailReloadToken((n) => n + 1);
               }}
             >
-              Erneut versuchen
+              {t.terminRetry}
             </button>
           </div>
         </div>
@@ -951,7 +938,7 @@ export function ChatWidget({
     const maxMonth = avail.days.length ? monthKey(avail.days[avail.days.length - 1].date) : null;
     const curKey = monthCursor.y * 12 + monthCursor.m;
 
-    const monthName = new Date(monthCursor.y, monthCursor.m, 1).toLocaleDateString("de-DE", {
+    const monthName = new Date(monthCursor.y, monthCursor.m, 1).toLocaleDateString(t.localeTag, {
       month: "long",
       year: "numeric",
     });
@@ -972,16 +959,14 @@ export function ChatWidget({
       return (
         <div className="kt-field">
           {notice && <div className="kt-notice">{notice}</div>}
-          <div className="kt-notice">
-            Aktuell sind online keine freien Zeiten in den nächsten Wochen verfügbar.
-          </div>
+          <div className="kt-notice">{t.terminNone}</div>
           <div className="kt-actions">
             <button
               type="button"
               className="kt-btn kt-primary"
-              onClick={() => answer("termin", "Kein fester Termin – bitte um Rückmeldung")}
+              onClick={() => answer("termin", t.terminNoneValue)}
             >
-              Ohne festen Termin anfragen
+              {t.terminNoneCta}
             </button>
           </div>
         </div>
@@ -997,7 +982,7 @@ export function ChatWidget({
             <div className="kt-cal-nav">
               <button
                 type="button"
-                aria-label="Vorheriger Monat"
+                aria-label={t.prevMonth}
                 disabled={minMonth == null || curKey <= minMonth}
                 onClick={() => shiftMonth(-1)}
               >
@@ -1005,7 +990,7 @@ export function ChatWidget({
               </button>
               <button
                 type="button"
-                aria-label="Nächster Monat"
+                aria-label={t.nextMonth}
                 disabled={maxMonth == null || curKey >= maxMonth}
                 onClick={() => shiftMonth(1)}
               >
@@ -1014,7 +999,7 @@ export function ChatWidget({
             </div>
           </div>
           <div className="kt-grid">
-            {WEEKDAY_LABELS.map((w) => (
+            {t.weekdays.map((w) => (
               <div key={w} className="kt-wd">
                 {w}
               </div>
@@ -1045,9 +1030,7 @@ export function ChatWidget({
 
         {selDay ? (
           <>
-            <p className="kt-cal-cap">
-              Freie Zeiten am {dateLabel(selDay.date)} (je {avail.durationMinutes} Min):
-            </p>
+            <p className="kt-cal-cap">{t.slotsCap(dateLabel(selDay.date, t.localeTag), avail.durationMinutes)}</p>
             <div className="kt-slots">
               {selDay.slots.map((s) => {
                 const chosen = data.slotStart === s.start;
@@ -1057,14 +1040,14 @@ export function ChatWidget({
                     key={s.start}
                     type="button"
                     disabled={!s.available}
-                    title={s.taken ? "Bereits vergeben" : undefined}
+                    title={s.taken ? t.slotTaken : undefined}
                     className={`kt-slot ${cls}`}
                     onClick={() =>
                       patch({
                         slotStart: s.start,
                         slotEnd: s.end,
                         datum: selDay.date,
-                        tageszeit: `${s.label}–${s.endLabel} Uhr`,
+                        tageszeit: `${s.label}–${s.endLabel}${t.clock ? ` ${t.clock}` : ""}`,
                       })
                     }
                   >
@@ -1075,7 +1058,7 @@ export function ChatWidget({
             </div>
           </>
         ) : (
-          <p className="kt-cal-cap">Bitte wählen Sie oben einen freien Tag (orange).</p>
+          <p className="kt-cal-cap">{t.slotsPick}</p>
         )}
 
         <div className="kt-actions">
@@ -1083,9 +1066,9 @@ export function ChatWidget({
             type="button"
             className="kt-btn kt-primary"
             disabled={!data.slotStart}
-            onClick={() => answer("termin", data.datum ? dateLabel(data.datum) : "", data.tageszeit)}
+            onClick={() => answer("termin", data.datum ? dateLabel(data.datum, t.localeTag) : "", data.tageszeit)}
           >
-            Weiter
+            {t.next}
           </button>
         </div>
       </div>
@@ -1095,26 +1078,26 @@ export function ChatWidget({
   function renderSummary() {
     const rows: [string, string, Step][] = [];
     rows.push([
-      "Anliegen",
-      emergency ? "Notfall" : mode === "booking" ? "Termin buchen" : "Beratung / Rückruf",
+      t.sumConcern,
+      emergency ? t.pathEmergency : mode === "booking" ? t.pathBooking : t.pathConsult,
       "welcome",
     ]);
-    rows.push(["Leistung", data.serviceLabel ?? "—", "service"]);
-    if (mode === "booking") rows.push(["Fläche", data.flaeche ?? "—", "flaeche"]);
-    rows.push(["Situation", data.situation?.trim() || "—", "situation"]);
-    rows.push(["Fotos", data.fotos.length ? `${data.fotos.length} ${data.fotos.length === 1 ? "Foto" : "Fotos"}` : "keine", "fotos"]);
+    rows.push([t.sumService, data.serviceLabel ?? t.dash, "service"]);
+    if (mode === "booking") rows.push([t.sumArea, data.flaeche ?? t.dash, "flaeche"]);
+    rows.push([t.sumSituation, data.situation?.trim() || t.dash, "situation"]);
+    rows.push([t.sumPhotos, data.fotos.length ? t.photosCount(data.fotos.length) : t.photosNone, "fotos"]);
     rows.push([
-      "Ort",
-      [data.strasse, [plz, data.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "—",
+      t.sumLocation,
+      [data.strasse, [plz, data.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || t.dash,
       "ort",
     ]);
     rows.push([
-      "Termin",
-      data.slotStart && data.datum ? `${dateLabel(data.datum)}, ${data.tageszeit}` : "Kein fester Termin",
+      t.sumAppointment,
+      data.slotStart && data.datum ? `${dateLabel(data.datum, t.localeTag)}, ${data.tageszeit}` : t.noFixedAppt,
       "termin",
     ]);
-    rows.push(["Name", `${data.vorname ?? ""} ${data.nachname ?? ""}`.trim(), "kontakt"]);
-    rows.push(["Kontakt", `${data.email ?? ""} · ${data.telefon ?? ""}`, "kontakt"]);
+    rows.push([t.sumName, `${data.vorname ?? ""} ${data.nachname ?? ""}`.trim(), "kontakt"]);
+    rows.push([t.sumContact, `${data.email ?? ""} · ${data.telefon ?? ""}`, "kontakt"]);
 
     return (
       <div className="kt-field">
@@ -1124,7 +1107,7 @@ export function ChatWidget({
               <span className="kt-k">{k}</span>
               <span className="kt-v">{v}</span>
               <button type="button" className="kt-edit" onClick={() => backTo(step)} disabled={submitting}>
-                Ändern
+                {t.edit}
               </button>
             </div>
           ))}
@@ -1139,16 +1122,12 @@ export function ChatWidget({
             onChange={(e) => setConsent(e.target.checked)}
             disabled={submitting}
           />
-          <span>
-            Ich bin einverstanden, dass {tenantName} meine Angaben speichert und verarbeitet, um meine Anfrage
-            zu bearbeiten. Die Daten werden nicht an Dritte weitergegeben. Ich kann diese Einwilligung
-            jederzeit widerrufen.
-          </span>
+          <span>{t.consent(tenantName)}</span>
         </label>
 
         <div className="kt-actions">
           <button type="button" className="kt-btn kt-ghost" onClick={goBackOne} disabled={submitting}>
-            Zurück
+            {t.back}
           </button>
           <button
             type="button"
@@ -1156,7 +1135,7 @@ export function ChatWidget({
             onClick={() => void submit()}
             disabled={submitting || !consent}
           >
-            {submitting ? "Wird gesendet …" : "Anfrage absenden"}
+            {submitting ? t.submitting : t.submit}
           </button>
         </div>
       </div>
@@ -1177,10 +1156,17 @@ export function ChatWidget({
           <span className="kt-name">{tenantName}</span>
           <span className="kt-status">
             <span className="kt-dot" />
-            Antwort meist in wenigen Minuten
+            {t.statusLine}
           </span>
         </div>
-        <button className="kt-close" type="button" onClick={reset} aria-label="Neu starten" title="Neu starten">
+        <LanguageSwitcher
+          current={locale}
+          label={dictionaries[locale].common.language}
+          tone="dark"
+          compact
+          onSelect={changeLocale}
+        />
+        <button className="kt-close" type="button" onClick={reset} aria-label={t.restart} title={t.restart}>
           {IconRestart}
         </button>
       </header>
@@ -1191,7 +1177,7 @@ export function ChatWidget({
 
       <div className="kt-scroll" ref={scrollRef}>
         <div className="kt-msg ai">
-          <div className="kt-bubble">Willkommen bei {tenantName}.</div>
+          <div className="kt-bubble">{t.welcome(tenantName)}</div>
         </div>
 
         {/* Questions asked before picking a path, and their answers. */}
@@ -1204,8 +1190,8 @@ export function ChatWidget({
               <div className="kt-bubble">
                 {renderText(turn.answer)}
                 {turn.needsHuman && (
-                  <button type="button" className="kt-inline-cta" onClick={() => chooseMode("consultation", "Beratung / Rückruf")}>
-                    Rückruf anfordern
+                  <button type="button" className="kt-inline-cta" onClick={() => chooseMode("consultation", t.pathConsult)}>
+                    {t.faqRequestCallback}
                   </button>
                 )}
               </div>
@@ -1225,7 +1211,7 @@ export function ChatWidget({
         {flow.map((item, i) => (
           <div key={i}>
             <div className="kt-msg ai">
-              <div className="kt-bubble">{renderText(PROMPTS[item.step])}</div>
+              <div className="kt-bubble">{renderText(t.prompts[item.step])}</div>
             </div>
             <div className="kt-msg me">
               <div className="kt-bubble">
@@ -1237,7 +1223,7 @@ export function ChatWidget({
         ))}
         {!done && !typing && (
           <div className="kt-msg ai">
-            <div className="kt-bubble">{renderText(PROMPTS[current])}</div>
+            <div className="kt-bubble">{renderText(t.prompts[current])}</div>
           </div>
         )}
         {typing && (
@@ -1252,14 +1238,14 @@ export function ChatWidget({
         {done && (
           <div className="kt-success">
             <div className="kt-check">{IconCheck}</div>
-            <h2>Vielen Dank, {data.vorname}!</h2>
+            <h2>{t.thanks(data.vorname ?? "")}</h2>
             <p>
               {data.slotStart && data.datum
-                ? `Ihr Wunschtermin am ${dateLabel(data.datum)} um ${data.tageszeit} ist bei uns eingegangen. Wir bestätigen ihn in Kürze.`
-                : "Ihre Anfrage ist eingegangen. Wir melden uns zeitnah bei Ihnen — in der Regel innerhalb von 24 Stunden, meist schneller."}
+                ? t.successWithSlot(dateLabel(data.datum, t.localeTag), data.tageszeit ?? "")
+                : t.successNoSlot}
             </p>
             <div className="kt-ref">
-              Ihre Vorgangsnummer: <b>{reference}</b>
+              {t.reference} <b>{reference}</b>
             </div>
             {data.slotStart && manageUrl && (
               <div className="kt-links">
@@ -1269,10 +1255,10 @@ export function ChatWidget({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  In meinen Kalender eintragen
+                  {t.addToCalendar}
                 </a>
                 <a className="kt-manage" href={manageUrl} target="_blank" rel="noopener noreferrer">
-                  Termin verschieben oder absagen
+                  {t.manageAppt}
                 </a>
               </div>
             )}
@@ -1284,7 +1270,7 @@ export function ChatWidget({
         {done ? (
           <div className="kt-actions">
             <button type="button" className="kt-btn kt-ghost" style={{ flex: 1 }} onClick={reset}>
-              Neue Anfrage
+              {t.restart}
             </button>
           </div>
         ) : (
@@ -1293,14 +1279,14 @@ export function ChatWidget({
         {showBack && (
           <div className="kt-back">
             <button type="button" className="kt-link" onClick={goBackOne}>
-              ← Zurück
+              ← {t.back}
             </button>
           </div>
         )}
       </div>
 
       <div className="kt-foot">
-        🔒 Ihre Angaben werden vertraulich behandelt · <b>KI-Terminassistent</b>
+        🔒 {t.footer} · <b>KI-Terminassistent</b>
       </div>
     </div>
   );
@@ -1402,7 +1388,7 @@ const CSS = `
 .kt-avatar { position: relative; width: 42px; height: 42px; flex: none; border-radius: 12px; background: linear-gradient(150deg, var(--accent), var(--accent-deep)); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 17px; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--accent) 60%, transparent); }
 .kt-avatar::after { content: ""; position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: var(--good); border: 2.5px solid var(--panel); }
 .kt-who { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.kt-name { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
+.kt-name { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kt-status { font-size: 11.5px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 0.32rem; }
 .kt-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
 .kt-close { flex: none; width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent; color: var(--ink-faint); cursor: pointer; display: grid; place-items: center; transition: background 0.15s, color 0.15s; }

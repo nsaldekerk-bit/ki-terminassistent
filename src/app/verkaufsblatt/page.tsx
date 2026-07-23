@@ -1,79 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getDemoSlug } from "@/lib/tenant/demo";
+import { getI18n } from "@/lib/i18n/server";
+import { LOCALE_META } from "@/lib/i18n/config";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { CopyContact } from "@/components/verkaufsblatt/CopyContact";
 
-export const metadata: Metadata = {
-  title: "KI-Terminassistent — Verkaufsblatt",
-  description: "Terminannahme für Handwerksbetriebe: rund um die Uhr erreichbar, ohne Doppelbuchungen.",
-  // A sheet you hand out in a sales conversation, not a page that should rank
-  // against the landing page.
-  robots: { index: false, follow: false },
-};
-
+// Contact details are the founder's own — not translated.
 const CONTACT = {
   name: "Noah Schneider",
   phone: "0152 24889612",
   email: "nsaldekerk@gmail.com",
 };
 
-const numbers = [
-  { n: "24/7", title: "Immer erreichbar", body: "Auch abends, am Wochenende und mitten im Einsatz." },
-  { n: "0", title: "Doppelbuchungen", body: "Belegte Zeiten werden gar nicht erst angeboten." },
-  { n: "1×", title: "Einrichten, fertig", body: "Ein Code-Schnipsel auf Ihrer Website. Kein neues Programm." },
-];
-
-const features = [
-  {
-    title: "Häufige Fragen beantworten",
-    body: "Eigener Menüpunkt im Chat: fünf typische Fragen zum Antippen — und der Kunde kann jederzeit selbst tippen. Antwortet zu Öffnungszeiten, Leistungen, Anfahrt und Richtpreisen.",
-    highlight: true,
-  },
-  {
-    title: "Termine rund um die Uhr",
-    body: "Kunden buchen selbst einen freien Termin aus Ihrem echten Kalender — belegte Zeiten sind gesperrt.",
-  },
-  {
-    title: "Notfälle erkennen",
-    body: "Dringende Fälle wie Wasserrohrbruch werden erkannt und sofort auf Ihre Notfallnummer verwiesen.",
-  },
-  {
-    title: "Urlaub & Sperrzeiten",
-    body: "Tragen Sie Urlaub oder einzelne Sperrtage ein — diese Zeiten bietet der Assistent gar nicht erst an.",
-  },
-  {
-    title: "Fahrzeit einplanen",
-    body: "Zwischen zwei Einsätzen bleibt automatisch Zeit für die Anfahrt. Keine unmöglichen Termine mehr.",
-  },
-  {
-    title: "Umbuchen & Absagen",
-    body: "Erledigt der Kunde selbst über einen Link — ohne Anruf bei Ihnen. Der Termin wird sofort wieder frei.",
-  },
-  {
-    title: "Fotos entgegennehmen",
-    body: "Kunden hängen Bilder an die Anfrage — damit Sie den Aufwand vorab realistisch einschätzen können.",
-  },
-  {
-    title: "Einzugsgebiet prüfen",
-    body: "Die Postleitzahl wird direkt bei der Anfrage geprüft — Sie sehen sofort, ob es Ihr Gebiet ist.",
-  },
-  {
-    title: "Alles an einem Ort",
-    body: "Anfragen, Termine und Gesprächsverläufe übersichtlich im Dashboard — mit Datenschutz-Einwilligung.",
-  },
-];
-
-const steps = [
-  { n: "1", title: "Wir binden es ein", body: "Ein kurzer Code-Schnipsel auf Ihrer Website — der Chat erscheint unten rechts." },
-  { n: "2", title: "Sie tragen Ihr Wissen ein", body: "Öffnungszeiten, Leistungen, Einzugsgebiet und Notfallnummer — einmalig." },
-  { n: "3", title: "Der Assistent übernimmt", body: "Kunden fragen und buchen selbst. Sie sehen jede Anfrage im Dashboard." },
-];
-
-const options = [
-  "Einrichtung und Einpflegen Ihrer Betriebsdaten",
-  "Automatische Bestätigungs-E-Mails und 24-Stunden-Erinnerung",
-  "KI-Antworten auch auf ungewöhnliche Fragen",
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getI18n();
+  return {
+    title: t.vb.metaTitle,
+    description: t.vb.metaDescription,
+    // A sheet handed out in a sales conversation, not a page that should rank
+    // against the landing page.
+    robots: { index: false, follow: false },
+  };
+}
 
 const Check = (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,11 +38,12 @@ const Shield = (size: number) => (
 );
 
 export default async function Verkaufsblatt() {
+  const { locale, t } = await getI18n();
   const demoSlug = await getDemoSlug();
   const demoHref = demoSlug ? `/embed/${demoSlug}` : "/admin/login";
 
   return (
-    <div className="vb">
+    <div className="vb" dir={LOCALE_META[locale].dir}>
       <style>{css}</style>
 
       <header className="vb-nav">
@@ -103,36 +53,36 @@ export default async function Verkaufsblatt() {
           </span>
           KI-Terminassistent
         </span>
-        <Link href="/admin/login" className="vb-nav-login">
-          Betriebs-Login
-        </Link>
+        <div className="vb-nav-right">
+          <LanguageSwitcher current={locale} label={t.common.language} tone="dark" />
+          <Link href="/admin/login" className="vb-nav-login">
+            {t.common.login}
+          </Link>
+        </div>
       </header>
 
       <main>
         <section className="vb-hero">
-          <span className="vb-eyebrow">Für Handwerksbetriebe</span>
+          <span className="vb-eyebrow">{t.common.forHandwerk}</span>
           <h1 className="vb-h1">
-            Jeder verpasste Anruf ist ein <span className="vb-accent">verlorener Auftrag</span>.
+            {t.vb.heroBefore}
+            <span className="vb-accent">{t.vb.heroAccent}</span>
+            {t.vb.heroAfter}
           </h1>
-          <p className="vb-sub">
-            Ihre Kunden rufen an, während Sie auf der Leiter stehen oder beim Kunden sind. Der
-            KI-Terminassistent nimmt diese Anfragen entgegen — rund um die Uhr, beantwortet die
-            üblichen Fragen und vergibt Termine aus Ihrem echten Kalender. Sie sehen morgens, was
-            reingekommen ist.
-          </p>
+          <p className="vb-sub">{t.vb.sub}</p>
           <div className="vb-cta-row">
             <Link href={demoHref} className="vb-btn vb-btn-primary">
-              Live-Demo öffnen
+              {t.common.openDemo}
             </Link>
             <Link href="/admin/login" className="vb-btn vb-btn-ghost">
-              Zum Betriebs-Login
+              {t.common.toLogin}
             </Link>
           </div>
-          <p className="vb-trust">Läuft direkt auf Ihrer Website · Keine Installation beim Kunden</p>
+          <p className="vb-trust">{t.vb.trust}</p>
         </section>
 
         <section className="vb-nums">
-          {numbers.map((x) => (
+          {t.vb.numbers.map((x) => (
             <div key={x.title} className="vb-num">
               <span className="vb-num-n">{x.n}</span>
               <b>{x.title}</b>
@@ -142,11 +92,11 @@ export default async function Verkaufsblatt() {
         </section>
 
         <section className="vb-sec">
-          <h2 className="vb-h2">Was der Assistent für Sie übernimmt</h2>
+          <h2 className="vb-h2">{t.vb.featuresTitle}</h2>
           <div className="vb-grid">
-            {features.map((f) => (
-              <div key={f.title} className={f.highlight ? "vb-card vb-hi" : "vb-card"}>
-                {f.highlight && <span className="vb-badge">Neu</span>}
+            {t.vb.features.map((f, i) => (
+              <div key={f.title} className={i === 0 ? "vb-card vb-hi" : "vb-card"}>
+                {i === 0 && <span className="vb-badge">{t.vb.featuresBadge}</span>}
                 <span className="vb-tick" aria-hidden="true">
                   {Check}
                 </span>
@@ -160,21 +110,18 @@ export default async function Verkaufsblatt() {
         <section className="vb-quote">
           <div className="vb-quote-in">
             <p>
-              „Der Assistent erfindet nichts. Was Sie nicht hinterlegt haben, behauptet er auch
-              nicht — dann bietet er dem Kunden stattdessen einen Rückruf an.“
-              <span>
-                Deshalb müssen Sie nicht befürchten, dass Ihren Kunden etwas Falsches zugesagt wird.
-              </span>
+              {t.vb.quote}
+              <span>{t.vb.quoteSub}</span>
             </p>
           </div>
         </section>
 
         <section className="vb-sec">
-          <h2 className="vb-h2">So einfach läuft es</h2>
+          <h2 className="vb-h2">{t.vb.stepsTitle}</h2>
           <div className="vb-steps">
-            {steps.map((s) => (
-              <div key={s.n} className="vb-step">
-                <span className="vb-step-n">{s.n}</span>
+            {t.vb.steps.map((s, i) => (
+              <div key={s.title} className="vb-step">
+                <span className="vb-step-n">{i + 1}</span>
                 <b>{s.title}</b>
                 <span>{s.body}</span>
               </div>
@@ -183,19 +130,16 @@ export default async function Verkaufsblatt() {
         </section>
 
         <section className="vb-sec">
-          <h2 className="vb-h2">Ihr Angebot</h2>
+          <h2 className="vb-h2">{t.vb.offerTitle}</h2>
           <div className="vb-offer">
             <div className="vb-fill">
-              <h3>Was es kostet</h3>
-              <span className="vb-price">Auf Anfrage</span>
-              <p>
-                Der Preis richtet sich nach Betriebsgröße und gewünschtem Umfang. Sagen Sie mir, was
-                Sie brauchen — dann bekommen Sie ein konkretes Angebot.
-              </p>
+              <h3>{t.vb.priceHeading}</h3>
+              <span className="vb-price">{t.vb.price}</span>
+              <p>{t.vb.priceBody}</p>
               <div className="vb-opts-wrap">
-                <div className="vb-opts-h">Mögliche Zusatzoptionen</div>
+                <div className="vb-opts-h">{t.vb.optionsHeading}</div>
                 <ul className="vb-opts">
-                  {options.map((o) => (
+                  {t.vb.options.map((o) => (
                     <li key={o}>
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M5 12.5l4.2 4.2L19 7" />
@@ -208,24 +152,38 @@ export default async function Verkaufsblatt() {
             </div>
 
             <div className="vb-fill vb-accent-box">
-              <h3>Ihr Ansprechpartner</h3>
+              <h3>{t.vb.contactHeading}</h3>
               <div className="vb-contact">
                 <span className="vb-contact-name">{CONTACT.name}</span>
-                <CopyContact phone={CONTACT.phone} email={CONTACT.email} />
+                <CopyContact
+                  items={[
+                    {
+                      value: CONTACT.phone,
+                      aria: t.vb.copyPhoneLabel(CONTACT.phone),
+                      doneAnnounce: t.vb.copyDoneAnnounce(CONTACT.phone),
+                    },
+                    {
+                      value: CONTACT.email,
+                      aria: t.vb.copyEmailLabel(CONTACT.email),
+                      doneAnnounce: t.vb.copyDoneAnnounce(CONTACT.email),
+                    },
+                  ]}
+                  copiedText={t.vb.copied}
+                  failedText={t.vb.copyFailed}
+                  failAnnounce={t.vb.copyFailAnnounce}
+                />
+                <span className="vb-copy-note">{t.vb.copyHint}</span>
               </div>
-              <p>
-                Gern zeige ich Ihnen den Assistenten in 10 Minuten live — telefonisch oder bei Ihnen
-                im Betrieb. Ohne Verpflichtung.
-              </p>
+              <p>{t.vb.contactBody}</p>
             </div>
           </div>
         </section>
 
         <section className="vb-band">
-          <h2 className="vb-h2">Sehen Sie es sich an, wie Ihre Kunden es sehen.</h2>
-          <p>Der Assistent ist live — probieren Sie ihn direkt aus.</p>
+          <h2 className="vb-h2">{t.vb.bandTitle}</h2>
+          <p>{t.vb.bandBody}</p>
           <Link href={demoHref} className="vb-btn vb-btn-primary">
-            Live-Demo öffnen
+            {t.common.openDemo}
           </Link>
         </section>
       </main>
@@ -237,7 +195,7 @@ export default async function Verkaufsblatt() {
           </span>
           KI-Terminassistent
         </span>
-        <span className="vb-copy-line">Terminassistent für Handwerksbetriebe</span>
+        <span className="vb-copy-line">{t.common.tagline}</span>
       </footer>
     </div>
   );
@@ -265,10 +223,11 @@ const css = `
 }
 .vb a { text-decoration: none; color: inherit; }
 
-.vb-nav { display: flex; align-items: center; justify-content: space-between; max-width: 1080px; margin: 0 auto; padding: 22px 24px; }
+.vb-nav { display: flex; align-items: center; justify-content: space-between; max-width: 1080px; margin: 0 auto; padding: 22px 24px; gap: 12px; }
+.vb-nav-right { display: flex; align-items: center; gap: 10px; }
 .vb-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; }
 .vb-logo { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; background: linear-gradient(150deg, var(--accent), var(--accent-deep)); box-shadow: 0 5px 14px -5px rgba(255,125,51,0.65); }
-.vb-nav-login { font-size: 14px; font-weight: 600; color: var(--muted); padding: 9px 16px; border: 1px solid var(--line); border-radius: 999px; transition: color .15s, border-color .15s, background .15s; }
+.vb-nav-login { font-size: 14px; font-weight: 600; color: var(--muted); padding: 9px 16px; border: 1px solid var(--line); border-radius: 999px; transition: color .15s, border-color .15s, background .15s; white-space: nowrap; }
 .vb-nav-login:hover { color: var(--text); border-color: #3a424c; background: var(--surface); }
 
 .vb-hero { max-width: 900px; margin: 0 auto; padding: 52px 24px 38px; text-align: center; }
@@ -336,10 +295,8 @@ const css = `
 .vb-copy:hover .vb-copy-ic { color: var(--accent); }
 .vb-copy-fb { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); opacity: 0; transition: opacity .18s; white-space: nowrap; }
 .vb-copy.vb-copied .vb-copy-fb, .vb-copy.vb-failed .vb-copy-fb { opacity: 1; }
-.vb-copy.vb-copied .vb-copy-fb::after { content: "Kopiert ✓"; }
 .vb-copy.vb-copied .vb-copy-ic { color: var(--accent); }
 .vb-copy.vb-failed .vb-copy-fb { color: #ff8f8f; }
-.vb-copy.vb-failed .vb-copy-fb::after { content: "Bitte manuell markieren"; }
 .vb-copy-note { font-size: 12px; color: var(--faint); margin-top: 5px; }
 .vb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
 
@@ -363,7 +320,7 @@ const css = `
 @media print {
   @page { size: A4 portrait; margin: 12mm; }
   .vb { background: #fff; color: #17191d; }
-  .vb-nav-login, .vb-cta-row, .vb-band { display: none; }
+  .vb-nav-right, .vb-cta-row, .vb-band { display: none; }
   .vb-num, .vb-card, .vb-step, .vb-fill, .vb-quote-in { background: #fff !important; border-color: #ddd8d3 !important; box-shadow: none !important; }
   .vb-num > span:last-child, .vb-card p, .vb-step > span:last-child, .vb-fill > p, .vb-sub, .vb-quote-in span, .vb-opts li { color: #4d545d !important; }
   .vb-num-n, .vb-accent, .vb-price { -webkit-text-fill-color: #ec6a1e; color: #ec6a1e !important; }

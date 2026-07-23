@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { contextToBrief, loadFaqContext, type FaqContext } from "@/lib/faq/context";
 import { answerByRules } from "@/lib/faq/rules";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
 
 /**
  * Default to the most capable model. Override with ANTHROPIC_MODEL — e.g.
@@ -39,7 +41,6 @@ Regeln:
 - Antworte NUR mit Informationen aus den Betriebsdaten unten. Erfinde nichts — keine Preise, Zeiten, Adressen oder Zusagen, die dort nicht stehen.
 - Steht die Information nicht in den Daten, sage genau das offen und biete an, dass sich der Betrieb meldet.
 - Antworte kurz: ein bis drei Sätze, keine Aufzählung außer bei echten Listen wie Öffnungszeiten.
-- Schreibe auf Deutsch und siez die Kundschaft.
 - Du nimmst keine Termine entgegen und triffst keine Absprachen. Für einen Termin verweist du auf die Auswahl im Assistenten.
 - Keine Beratung zu Reparaturen, keine Kostenschätzung, keine Ferndiagnose.`;
 
@@ -52,30 +53,32 @@ export async function answerQuestion(params: {
   tenantId: string;
   question: string;
   ctx?: FaqContext;
+  locale?: Locale;
 }): Promise<FaqAnswer> {
-  const { tenantId, question } = params;
-  const ctx = params.ctx ?? (await loadFaqContext(tenantId));
+  const { tenantId, question, locale = "de" } = params;
+  const ctx = params.ctx ?? (await loadFaqContext(tenantId, locale));
 
-  const byRule = answerByRules(question, ctx);
+  const byRule = answerByRules(question, ctx, locale);
   if (byRule) {
     return { answer: byRule.answer, source: "rules", topic: byRule.topic, needsHuman: false };
   }
 
   const ai = getClient();
   if (!ai) {
-    return { answer: fallbackText(ctx), source: "none", needsHuman: true };
+    return { answer: fallbackText(ctx, locale), source: "none", needsHuman: true };
   }
 
   try {
     const response = await ai.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      system: `${SYSTEM_RULES}\n\n--- Betriebsdaten ---\n${contextToBrief(ctx)}`,
+      // The business brief stays in German; the instruction pins the reply language.
+      system: `${SYSTEM_RULES}\n- ${dictionaries[locale].faq.aiInstruction}\n\n--- Betriebsdaten ---\n${contextToBrief(ctx)}`,
       messages: [{ role: "user", content: question }],
     });
 
     if (response.stop_reason === "refusal") {
-      return { answer: fallbackText(ctx), source: "none", needsHuman: true };
+      return { answer: fallbackText(ctx, locale), source: "none", needsHuman: true };
     }
 
     const text = response.content
@@ -85,18 +88,19 @@ export async function answerQuestion(params: {
       .trim();
 
     if (!text) {
-      return { answer: fallbackText(ctx), source: "none", needsHuman: true };
+      return { answer: fallbackText(ctx, locale), source: "none", needsHuman: true };
     }
 
     return { answer: text, source: "ai", needsHuman: false };
   } catch (error) {
     // Never let a failing AI call break the widget — fall back to a human.
     console.error("FAQ AI call failed", error);
-    return { answer: fallbackText(ctx), source: "none", needsHuman: true };
+    return { answer: fallbackText(ctx, locale), source: "none", needsHuman: true };
   }
 }
 
-function fallbackText(ctx: FaqContext): string {
-  const call = ctx.phone ? ` Sie erreichen uns auch direkt unter ${ctx.phone}.` : "";
-  return `Das kann ich Ihnen leider nicht sicher beantworten — da möchte ich Sie nicht falsch informieren.${call} Soll ich Ihnen einen Rückruf organisieren?`;
+function fallbackText(ctx: FaqContext, locale: Locale): string {
+  const t = dictionaries[locale].faq;
+  const clause = ctx.phone ? t.fallbackPhone(ctx.phone) : "";
+  return t.fallback(clause);
 }

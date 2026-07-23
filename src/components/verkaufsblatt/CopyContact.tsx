@@ -4,6 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Flash = "idle" | "copied" | "failed";
 
+export interface CopyItem {
+  value: string;
+  /** Accessible button name, already localised. */
+  aria: string;
+  /** What the live region announces on success, already localised. */
+  doneAnnounce: string;
+}
+
 /**
  * navigator.clipboard is unavailable on insecure origins and blocked in some
  * embedded contexts, so fall back to the legacy selection trick before telling
@@ -37,12 +45,16 @@ const IconCopy = (
 );
 
 function CopyButton({
-  value,
-  label,
+  item,
+  copiedText,
+  failedText,
+  failAnnounce,
   onResult,
 }: {
-  value: string;
-  label: string;
+  item: CopyItem;
+  copiedText: string;
+  failedText: string;
+  failAnnounce: string;
   onResult: (message: string) => void;
 }) {
   const [flash, setFlash] = useState<Flash>("idle");
@@ -55,47 +67,64 @@ function CopyButton({
   const show = useCallback(
     (next: Exclude<Flash, "idle">) => {
       setFlash(next);
-      onResult(
-        next === "copied" ? `${value} kopiert` : "Kopieren nicht möglich — bitte manuell markieren"
-      );
+      onResult(next === "copied" ? item.doneAnnounce : failAnnounce);
       if (timer.current) window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => setFlash("idle"), 2000);
     },
-    [onResult, value]
+    [failAnnounce, item.doneAnnounce, onResult]
   );
 
   async function copy() {
     if (navigator.clipboard?.writeText) {
       try {
-        await navigator.clipboard.writeText(value);
+        await navigator.clipboard.writeText(item.value);
         show("copied");
         return;
       } catch {
         // permission or policy blocked it — try the legacy path below
       }
     }
-    show(legacyCopy(value) ? "copied" : "failed");
+    show(legacyCopy(item.value) ? "copied" : "failed");
   }
 
   return (
-    <button type="button" className={`vb-copy vb-${flash}`} onClick={copy} aria-label={label}>
-      <span>{value}</span>
+    <button type="button" className={`vb-copy vb-${flash}`} onClick={copy} aria-label={item.aria}>
+      <span>{item.value}</span>
       <span className="vb-copy-ic" aria-hidden="true">
         {IconCopy}
       </span>
-      <span className="vb-copy-fb" aria-hidden="true" />
+      <span className="vb-copy-fb" aria-hidden="true">
+        {flash === "copied" ? copiedText : flash === "failed" ? failedText : ""}
+      </span>
     </button>
   );
 }
 
-export function CopyContact({ phone, email }: { phone: string; email: string }) {
+export function CopyContact({
+  items,
+  copiedText,
+  failedText,
+  failAnnounce,
+}: {
+  items: CopyItem[];
+  copiedText: string;
+  failedText: string;
+  failAnnounce: string;
+}) {
   const [message, setMessage] = useState("");
 
   return (
     <>
-      <CopyButton value={phone} label={`Telefonnummer ${phone} kopieren`} onResult={setMessage} />
-      <CopyButton value={email} label={`E-Mail-Adresse ${email} kopieren`} onResult={setMessage} />
-      <span className="vb-copy-note">Zum Kopieren antippen</span>
+      {items.map((item) => (
+        <CopyButton
+          key={item.value}
+          item={item}
+          copiedText={copiedText}
+          failedText={failedText}
+          failAnnounce={failAnnounce}
+          onResult={setMessage}
+        />
+      ))}
       <p className="vb-sr" role="status" aria-live="polite">
         {message}
       </p>
