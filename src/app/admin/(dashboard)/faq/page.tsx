@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/db";
 import { requireTenantId } from "@/lib/auth-helpers";
+import { getI18n } from "@/lib/i18n/server";
 import { FaqForm } from "@/components/admin/FaqForm";
 import { deleteFaqEntry } from "./actions";
 
 export default async function FaqPage() {
   const tenantId = await requireTenantId();
+  const { locale, t } = await getI18n();
+  const a = t.admin.faq;
   const entries = await prisma.faqEntry.findMany({
     where: { tenantId },
     orderBy: { sortOrder: "asc" },
@@ -13,17 +16,14 @@ export default async function FaqPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-lg font-medium">Eigene Fragen</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Ihre eigenen Antworten auf typische Kundenfragen. Öffnungszeiten, Adresse, Telefon und Leistungen
-          beantwortet der Assistent bereits von selbst — hier ergänzen Sie alles Betriebsspezifische.
-        </p>
+        <h1 className="text-lg font-medium">{a.title}</h1>
+        <p className="mt-1 text-sm text-gray-500">{a.intro}</p>
       </div>
 
-      <FaqForm />
+      <FaqForm locale={locale} />
 
       {entries.length === 0 ? (
-        <p className="text-sm text-gray-500">Noch keine eigenen Fragen hinterlegt.</p>
+        <p className="text-sm text-gray-500">{a.empty}</p>
       ) : (
         <ul className="max-w-2xl space-y-2">
           {entries.map((e) => (
@@ -32,12 +32,16 @@ export default async function FaqPage() {
                 <div className="flex-1 space-y-1">
                   <p className="text-sm font-medium text-gray-900">{e.question}</p>
                   <p className="whitespace-pre-wrap text-sm text-gray-600">{e.answer}</p>
-                  {e.keywords && <p className="text-xs text-gray-400">Stichworte: {e.keywords}</p>}
+                  {e.keywords && (
+                    <p className="text-xs text-gray-400">
+                      {a.keywordsLabel} {e.keywords}
+                    </p>
+                  )}
                 </div>
                 <form action={deleteFaqEntry}>
                   <input type="hidden" name="id" value={e.id} />
                   <button type="submit" className="text-sm text-red-600 hover:underline">
-                    Löschen
+                    {t.admin.del}
                   </button>
                 </form>
               </div>

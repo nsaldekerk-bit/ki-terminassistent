@@ -1,18 +1,20 @@
 import { formatInTimeZone } from "date-fns-tz";
-import { de } from "date-fns/locale";
 import { prisma } from "@/lib/db";
 import { requireTenantId } from "@/lib/auth-helpers";
+import { getI18n } from "@/lib/i18n/server";
+import { DATE_FNS_LOCALES } from "@/lib/i18n/date";
 import { updateAppointmentStatus } from "./actions";
-
-const STATUS_LABELS: Record<string, string> = {
-  requested: "Angefragt",
-  confirmed: "Bestätigt",
-  cancelled: "Storniert",
-  completed: "Abgeschlossen",
-};
 
 export default async function AppointmentsPage() {
   const tenantId = await requireTenantId();
+  const { locale, t } = await getI18n();
+  const a = t.admin.appointments;
+  const statusLabels: Record<string, string> = {
+    requested: a.statusRequested,
+    confirmed: a.statusConfirmed,
+    cancelled: a.statusCancelled,
+    completed: a.statusCompleted,
+  };
   const location = await prisma.location.findFirstOrThrow({ where: { tenantId } });
   const appointments = await prisma.appointment.findMany({
     where: { tenantId },
@@ -23,42 +25,44 @@ export default async function AppointmentsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-lg font-medium">Termine</h1>
+      <h1 className="text-lg font-medium">{a.title}</h1>
 
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 text-left text-gray-500">
-            <th className="py-2 font-normal">Zeitpunkt</th>
-            <th className="font-normal">Dienstleistung</th>
-            <th className="font-normal">Kunde</th>
-            <th className="font-normal">Status</th>
+            <th className="py-2 font-normal">{a.time}</th>
+            <th className="font-normal">{a.service}</th>
+            <th className="font-normal">{a.customer}</th>
+            <th className="font-normal">{a.status}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {appointments.map((a) => (
-            <tr key={a.id} className="border-b border-gray-100">
+          {appointments.map((ap) => (
+            <tr key={ap.id} className="border-b border-gray-100">
               <td className="py-2">
-                {formatInTimeZone(a.startTime, location.timezone, "d. MMM yyyy, HH:mm 'Uhr'", { locale: de })}
+                {formatInTimeZone(ap.startTime, location.timezone, "d MMM yyyy, HH:mm", {
+                  locale: DATE_FNS_LOCALES[locale],
+                })}
               </td>
-              <td>{a.service.name}</td>
+              <td>{ap.service.name}</td>
               <td>
-                {a.customer.name}
-                <div className="text-xs text-gray-400">{[a.customer.phone, a.customer.email].filter(Boolean).join(", ")}</div>
+                {ap.customer.name}
+                <div className="text-xs text-gray-400">{[ap.customer.phone, ap.customer.email].filter(Boolean).join(", ")}</div>
               </td>
-              <td>{STATUS_LABELS[a.status] ?? a.status}</td>
+              <td>{statusLabels[ap.status] ?? ap.status}</td>
               <td>
                 <form action={updateAppointmentStatus} className="flex items-center gap-2">
-                  <input type="hidden" name="id" value={a.id} />
-                  <select name="status" defaultValue={a.status} className="rounded-md border border-gray-300 px-2 py-1 text-sm">
-                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                  <input type="hidden" name="id" value={ap.id} />
+                  <select name="status" defaultValue={ap.status} className="rounded-md border border-gray-300 px-2 py-1 text-sm">
+                    {Object.entries(statusLabels).map(([value, label]) => (
                       <option key={value} value={value}>
                         {label}
                       </option>
                     ))}
                   </select>
                   <button type="submit" className="text-sm text-gray-700 hover:underline">
-                    Speichern
+                    {t.admin.save}
                   </button>
                 </form>
               </td>
@@ -67,7 +71,7 @@ export default async function AppointmentsPage() {
           {appointments.length === 0 && (
             <tr>
               <td colSpan={5} className="py-4 text-gray-400">
-                Noch keine Termine.
+                {a.empty}
               </td>
             </tr>
           )}
