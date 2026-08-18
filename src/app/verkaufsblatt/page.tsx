@@ -4,6 +4,7 @@ import { getDemoSlug } from "@/lib/tenant/demo";
 import { getI18n } from "@/lib/i18n/server";
 import { LOCALE_META } from "@/lib/i18n/config";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { notFound } from "next/navigation";
 import { CopyContact } from "@/components/verkaufsblatt/CopyContact";
 
 // Contact details are the founder's own — not translated.
@@ -13,6 +14,19 @@ const CONTACT = {
   email: "nsaldekerk@gmail.com",
 };
 
+
+/*
+ * Off switch for the sales sheet.
+ *
+ * The page only answers when the environment variable VERKAUFSBLATT is set
+ * to "on". Without it every visitor gets a normal 404, so the sheet is not
+ * reachable — but the code stays in place and nothing is lost.
+ *
+ * To publish it again: in Vercel under Settings -> Environment Variables add
+ *   VERKAUFSBLATT = on
+ * and redeploy. Delete the variable to take it down again.
+ */
+const IST_VEROEFFENTLICHT = process.env.VERKAUFSBLATT === "on";
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getI18n();
   return {
@@ -38,6 +52,8 @@ const Shield = (size: number) => (
 );
 
 export default async function Verkaufsblatt() {
+  if (!IST_VEROEFFENTLICHT) notFound();
+
   const { locale, t } = await getI18n();
   const demoSlug = await getDemoSlug();
   const demoHref = demoSlug ? `/embed/${demoSlug}` : "/admin/login";
