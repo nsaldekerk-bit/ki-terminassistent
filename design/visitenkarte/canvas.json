@@ -1,0 +1,17 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "A · Vorderseite — Stahl & Signal", "x": 0, "y": 0, "w": 321, "h": 208, "print": "fixed" },
+    { "file": "RueckseiteA.dc.html", "title": "A · Rückseite", "x": 401, "y": 0, "w": 321, "h": 208, "print": "fixed" },
+    { "file": "VorderseiteB.dc.html", "title": "B · Vorderseite — Papierweiß", "x": 0, "y": 328, "w": 321, "h": 208, "print": "fixed" },
+    { "file": "RueckseiteB.dc.html", "title": "B · Rückseite", "x": 401, "y": 328, "w": 321, "h": 208, "print": "fixed" },
+    { "file": "VorderseiteC.dc.html", "title": "C · Vorderseite — Vollton", "x": 0, "y": 656, "w": 321, "h": 208, "print": "fixed" },
+    { "file": "RueckseiteC.dc.html", "title": "C · Rückseite", "x": 401, "y": 656, "w": 321, "h": 208, "print": "fixed" }
+  ],
+  "annotations": [
+    { "id": "richtung-a", "x": 800, "y": 0, "w": 260, "text": "A — Stahl & Signal (Leitrichtung)\n\nAnthrazit mit einem einzigen orangen Akzent, technische Grotesk plus Monospace für die harten Daten. Wirkt nach Software statt nach Werbeagentur.\n\nHaken: dunkle Karten brauchen guten Druck (Farbabrieb an den Kanten) und kosten mehr." },
+    { "id": "richtung-b", "x": 800, "y": 328, "w": 260, "text": "B — Papierweiß\n\nWarmweiß, viel Luft, Orange nur als Strich und Rahmen. Druckt auf jedem Papier sauber, altert nicht, wirkt beratend.\n\nHaken: fällt im Kartenstapel weniger auf als A oder C." },
+    { "id": "richtung-c", "x": 800, "y": 656, "w": 260, "text": "C — Vollton\n\nVorderseite komplett orange, nur der Schriftzug. Bleibt hängen, funktioniert auch als reine Markenkarte ohne Namen.\n\nHaken: vollflächige Farbe verzeiht keine Druckschwankung und polarisiert." },
+    { "id": "produktion", "x": 800, "y": 984, "w": 260, "text": "Produktion\n\n85 × 55 mm (deutsches Standardformat), hier auf Trimmgröße gezeichnet. Für die Druckerei kommen 3 mm Beschnitt ringsum dazu — sag Bescheid, dann lege ich eine Version mit Beschnitt und Schnittmarken an.\n\nKontaktangaben in eckigen Klammern sind Platzhalter." }
+  ],
+  "launch": { "view": "canvas" }
+}
