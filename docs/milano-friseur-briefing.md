@@ -4,7 +4,11 @@
 **Zielkunde:** Milano Friseur, Issumer Str. 3, 47608 Geldern
 **Zweck:** Unverbindliche Demo-Webseite als Verkaufsargument — der Inhaber soll in 60 Sekunden
 sehen, was ihm fehlt (24/7-Terminbuchung, Sichtbarkeit bei Google, Instagram → Termin).
-**Stand:** 06.09.2026 · Bauphase startet am Folgetag
+**Betriebsart:** **Rein lokal.** Die Seite geht nicht online, bekommt keine Domain und ist
+für niemanden außer uns erreichbar. Sie läuft auf unserem Rechner und wird dem Inhaber
+im Laden gezeigt. (Details: § 2.1)
+**Stand:** 06.09.2026 · heute nur Konzept, **Bauphase startet am Folgetag** — heute wird
+bewusst keine Zeile Code geschrieben.
 **Branch:** `claude/milano-friseur-demo-site-r2a5bu`
 
 ---
@@ -102,6 +106,31 @@ Vorhandene Bausteine, die wir wiederverwenden:
 **Messbar (was wir auf dem Verkaufsblatt behaupten können):**
 - Ladezeit < 2 s auf 4G, Lighthouse ≥ 95 in allen vier Kategorien
 - Buchung in ≤ 4 Taps vom Hero bis zur Bestätigung
+
+### 2.1 Betriebsart: rein lokal (wichtige Rahmenbedingung)
+
+Die Demo wird **nicht veröffentlicht** — keine Domain, kein Vercel-Deployment, keine
+öffentliche URL, kein Eintrag bei Google. Sie existiert nur auf unserem Rechner unter
+`http://localhost:3000/milano` und wird dem Inhaber persönlich gezeigt.
+
+**Was daraus folgt:**
+
+| Punkt | Konsequenz |
+|---|---|
+| Hosting | Keins. `npm run dev` reicht. Vercel entfällt komplett. |
+| Datenbank | Lokales PostgreSQL. Empfehlung: `docker run --name milano-db -e POSTGRES_PASSWORD=milano -p 5432:5432 -d postgres:16` — in sich geschlossen, nichts verlässt den Rechner. Alternative: Neon (gehostet, aber die Demo-Seite bleibt trotzdem unerreichbar). |
+| E-Mails | `EMAIL_PROVIDER=console` schreibt Mails nur ins Terminal — **dann kommt beim Kunden keine Bestätigungsmail an.** Wenn der Aha-Moment mit echter Mail funktionieren soll, brauchen wir einen Versanddienst (Resend, Gratis-Kontingent), Empfänger ausschließlich unsere eigene Adresse. → Entscheidung 8 in § 11. |
+| Erinnerungs-Cron | Läuft lokal nicht automatisch. Für die Demo bei Bedarf die Route von Hand aufrufen. |
+| `noindex` / robots.txt | Praktisch gegenstandslos, weil nichts erreichbar ist. Wir bauen es trotzdem ein, damit ein späteres Deployment nicht versehentlich indexiert wird. |
+| SEO | Wird gebaut und **gezeigt** (Titel, Schema, Sitemap), wirkt aber erst, wenn der Kunde zusagt und die Seite live geht. Im Gespräch als „das ist vorbereitet" verkaufen, nicht als „das läuft schon". |
+| Impressum/Datenschutz | Rechtlich erst bei Veröffentlichung Pflicht. Wir bauen die Seiten trotzdem — mit sichtbarem Platzhalter-Hinweis, weil sie zum Lieferumfang gehören und im Gespräch Kompetenz zeigen. |
+
+**Wie wir sie im Laden vorführen** (Entscheidung 9 in § 11):
+1. **Laptop mitnehmen** — einfachste und sicherste Variante, funktioniert ohne fremdes WLAN.
+2. **Auf seinem Handy**: Laptop-Hotspot oder gemeinsames WLAN, `next dev --hostname 0.0.0.0`,
+   er ruft `http://<lokale-IP>:3000/milano` auf. Wirkt stärker, weil er es in der eigenen
+   Hand hat — braucht aber zwei Minuten Vorbereitung vor Ort.
+3. **Bildschirmaufnahme als Rückfallebene**, falls im Laden technisch etwas klemmt.
 
 ---
 
@@ -382,6 +411,10 @@ Gibt es Gutscheine?
 
 ## 8. SEO & Auffindbarkeit
 
+> Die Demo geht nicht online (§ 2.1) — SEO wirkt hier also noch nicht. Wir bauen es
+> vollständig ein, damit es beim Zuschlag sofort greift, und **zeigen** es im Gespräch:
+> „Das ist der Titel, mit dem Sie bei Google auftauchen." Kein Versprechen im Präsens.
+
 - **Title:** „Milano Friseur Geldern — Termin online buchen | Herren & Bart"
   **Description:** 4,9 ★ aus 33 Bewertungen · Issumer Str. 3 · online in 30 Sekunden buchen.
 - **Keywords:** friseur geldern · barbershop geldern · herrenfriseur geldern · fade geldern ·
@@ -427,15 +460,19 @@ Gibt es Gutscheine?
   Platzhalter als solche kennzeichnen.
 - **Preise:** in der Demo klar als „Beispielpreise" markieren, solange die echte Liste fehlt.
 
-### 9.4 Kennzeichnung als Demo (wichtig)
-Die Seite trägt einen echten Firmennamen, ist aber nicht vom Inhaber beauftragt. Deshalb:
-- schmales Band oben: **„Demo-Entwurf von westfaliadigital · keine offizielle Seite von
-  Milano Friseur"** (im Verkaufsgespräch ausblendbar)
-- `robots: noindex, nofollow` + `robots.txt` disallow, bis der Kunde zusagt
-- Buchungen im Demo-Tenant lösen **keine** Mails an den Salon aus — Empfänger auf unsere
-  eigene Adresse setzen
-- Vor dem Zeigen: unaufgefordert sagen, dass es ein unverbindlicher Entwurf ist. Das ist
-  fair und verkauft besser als ein Überrumpelungsversuch.
+### 9.4 Kennzeichnung als Demo
+Die Seite trägt einen echten Firmennamen, ist aber nicht vom Inhaber beauftragt. Weil sie
+**nicht veröffentlicht wird** (§ 2.1), entschärft sich das meiste von selbst — es gibt keine
+Seite, die jemand für die offizielle halten könnte. Es bleiben drei Punkte:
+
+- Beim Zeigen unaufgefordert sagen, dass es ein unverbindlicher Entwurf ist und nicht online
+  steht. Das ist fair und verkauft besser als ein Überrumpelungsversuch.
+- Kleiner Hinweis im Footer („Entwurf von westfaliadigital, nicht veröffentlicht") — falls
+  wir doch einmal einen Screenshot verschicken, ist er selbsterklärend.
+- Buchungen im Demo-Mandanten dürfen **keine** Mails an den Salon auslösen. Empfänger
+  ausschließlich unsere eigene Adresse.
+- `noindex` + robots.txt-Sperre einbauen, obwohl heute gegenstandslos: Sie ist die
+  Versicherung dagegen, dass ein späteres Deployment versehentlich indexiert wird.
 
 ---
 
@@ -443,7 +480,7 @@ Die Seite trägt einen echten Firmennamen, ist aber nicht vom Inhaber beauftragt
 
 | Block | Zeit | Inhalt |
 |---|---|---|
-| 0 | 15 Min | `npm install`, Datenbank (Neon oder lokal), `.env` füllen, `prisma migrate dev`, Next-16-Doku in `node_modules/next/dist/docs/` querlesen |
+| 0 | 20 Min | `npm install`, **lokales Postgres** starten, `.env` füllen (`EMAIL_PROVIDER` nach Entscheidung 8), `prisma migrate dev`, Next-16-Doku in `node_modules/next/dist/docs/` querlesen |
 | 1 | 45 Min | Tenant `milano` anlegen (`npm run create-tenant`), `prisma/seed-milano.ts`: Standort, Öffnungszeiten, Leistungen, Team, FAQ; Notfall/Einzugsgebiet aus, `bufferMinutes: 0` |
 | 2 | 60 Min | § 6.3 Punkte 1+2: Verfügbarkeit pro Mitarbeiter, 15-Min-Raster, Vorlauf konfigurierbar — **erst die Mechanik, dann die Optik** |
 | 3 | 90 Min | Design-System + Shell: Token, Fonts, Header, Sticky-Mobile-Bar, Footer, `layout.tsx` |
@@ -452,7 +489,7 @@ Die Seite trägt einen echten Firmennamen, ist aber nicht vom Inhaber beauftragt
 | 6 | 45 Min | Unterseiten: Leistungen, Team, Galerie, Kontakt, Impressum, Datenschutz |
 | 7 | 45 Min | SEO: Metadata, JSON-LD, `sitemap.ts`, `robots.ts`, OG-Bild, `noindex`-Schalter |
 | 8 | 30 Min | QA: Lighthouse, Tastaturtest, 360-px-Viewport, echte Testbuchung durchklicken |
-| 9 | 15 Min | Vercel-Preview deployen, Link fürs Handy, Demo-Skript für das Gespräch |
+| 9 | 20 Min | **Kein Deploy.** Lokalen Vorführmodus einrichten (Laptop bzw. `--hostname 0.0.0.0` fürs Handy), Startbefehl notieren, Testbuchung zurücksetzen, Demo-Skript einmal durchspielen |
 
 **Regel für den Bau:** erst Datenmodell + Buchungsmechanik, dann Optik. Eine schöne Seite mit
 kaputter Buchung verkauft nichts, eine schlichte Seite mit funktionierender Buchung schon.
@@ -473,6 +510,12 @@ kaputter Buchung verkauft nichts, eine schlichte Seite mit funktionierender Buch
 7. **Kundendaten:** Rufst du im Laden an, um Öffnungszeiten/Preise/Impressumsdaten zu holen,
    oder bauen wir bewusst mit gekennzeichneten Platzhaltern und fragen die Daten erst
    im Verkaufsgespräch ab?
+8. **E-Mail:** Soll die Bestätigungsmail im Termin wirklich auf dem Handy ankommen (dann
+   brauchen wir einen Resend-Schlüssel, Empfänger nur wir selbst) — oder reicht es, die Mail
+   auf dem Bildschirm zu zeigen (`EMAIL_PROVIDER=console`, nichts verlässt den Rechner)?
+   *Empfehlung: echte Mail — das ist der stärkste Moment der Demo.*
+9. **Vorführung:** Laptop mitnehmen (einfach, sicher) oder auf seinem Handy über
+   Laptop-Hotspot (wirkt stärker, zwei Minuten Vorbereitung vor Ort)?
 
 ---
 
@@ -499,7 +542,7 @@ kaputter Buchung verkauft nichts, eine schlichte Seite mit funktionierender Buch
 - [ ] 15–25 Fotos: Laden außen/innen, Stühle, Team, mindestens 10 Arbeiten
 - [ ] Zugang oder Freigabe für Instagram-Inhalte
 - [ ] Google-Unternehmensprofil: Zugriff/Inhaberschaft geklärt?
-- [ ] Wunschdomain (z. B. `milano-friseur-geldern.de`) — verfügbar?
+- [ ] Wunschdomain (z. B. `milano-friseur-geldern.de`) — erst relevant, wenn er zusagt; für die Demo nicht nötig
 
 **Betrieb der Seite**
 - [ ] Wer pflegt Preise/Zeiten künftig — er im Dashboard oder wir?
