@@ -5,6 +5,7 @@ import { Header } from "@/components/milano/Header";
 import { Assistant } from "@/components/milano/Assistant";
 import { Reveal } from "@/components/milano/Reveal";
 import { Monogramm } from "@/components/milano/Brand";
+import { StilUmschalter } from "@/components/milano/StilUmschalter";
 import { Icon } from "@/components/milano/Icon";
 import { salon } from "@/lib/milano/content";
 import "./milano.css";
@@ -50,6 +51,7 @@ export default function MilanoLayout({ children }: { children: React.ReactNode }
               {" "}· keine offizielle Seite von {salon.name}
             </span>
           </span>
+          <StilUmschalter />
         </div>
       </div>
 

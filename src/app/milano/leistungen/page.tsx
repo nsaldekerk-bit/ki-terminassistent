@@ -66,7 +66,7 @@ export default function LeistungenSeite() {
 
       {PREISE_BESTAETIGT ? null : (
         <p className="m-infobox">
-          <span style={{ flex: "none", color: "var(--gold)", marginTop: 3 }}>
+          <span style={{ flex: "none", color: "var(--akzent)", marginTop: 3 }}>
             <Icon name="stern" size={17} gefuellt />
           </span>
           <span>

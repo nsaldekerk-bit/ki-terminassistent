@@ -22,9 +22,9 @@
   --hairline: rgba(200, 163, 90, 0.22);
 
   /* Messing */
-  --gold: #c8a35a;
-  --gold-hell: #ebd9a6;
-  --gold-tief: #8a6b2e;
+  --akzent: #c8a35a;
+  --akzent-hell: #ebd9a6;
+  --akzent-tief: #8a6b2e;
 
   /* Helle Fläche */
   --creme: #f4efe6;
@@ -35,7 +35,7 @@
   /* Schrift */
   --text: #efeae1;
   --text-weich: #a39d93;
-  --text-leise: #6f6a62;
+  --text-leise: #918b81;
 
   /* Status */
   --gruen: #4fa87a;
@@ -69,7 +69,7 @@
 }
 
 .milano :focus-visible {
-  outline: 1.5px solid var(--gold-hell);
+  outline: 1.5px solid var(--akzent-hell);
   outline-offset: 4px;
 }
 
@@ -108,7 +108,7 @@
   font-size: 10px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--akzent);
   margin: 0;
   font-weight: 500;
 }
@@ -143,7 +143,7 @@
 
 .m-kursiv {
   font-style: italic;
-  color: var(--gold);
+  color: var(--akzent);
 }
 
 .m-lead {
@@ -168,7 +168,7 @@
 
 /* Werte, die wir vom Inhaber noch brauchen. */
 .m-ph {
-  color: var(--gold);
+  color: var(--akzent);
   border-bottom: 1px dotted rgba(200, 163, 90, 0.5);
   white-space: nowrap;
 }
@@ -178,7 +178,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--gold);
+  color: var(--akzent);
   width: 116px;
 }
 
@@ -262,7 +262,7 @@
 }
 
 .m-btn-primary {
-  background: linear-gradient(160deg, var(--gold-hell), var(--gold) 55%, var(--gold-tief));
+  background: linear-gradient(160deg, var(--akzent-hell), var(--akzent) 55%, var(--akzent-tief));
   color: #14110a;
 }
 
@@ -274,8 +274,8 @@
 }
 
 .m-btn-ghost:hover {
-  border-color: var(--gold);
-  color: var(--gold-hell);
+  border-color: var(--akzent);
+  color: var(--akzent-hell);
   background: rgba(200, 163, 90, 0.06);
 }
 
@@ -321,7 +321,7 @@
   flex: none;
   background: repeating-linear-gradient(
     135deg,
-    var(--gold) 0 2px,
+    var(--akzent) 0 2px,
     transparent 2px 4px
   );
   opacity: 0.7;
@@ -399,7 +399,7 @@
 }
 
 .m-nav a:hover {
-  color: var(--gold);
+  color: var(--akzent);
   border-color: var(--hairline);
 }
 
@@ -422,7 +422,7 @@
   transition: border-color 0.18s ease, color 0.18s ease;
 }
 
-.m-icon-btn:hover { border-color: var(--gold); color: var(--gold); }
+.m-icon-btn:hover { border-color: var(--akzent); color: var(--akzent); }
 
 .m-header-cta { display: none; }
 
@@ -459,7 +459,7 @@
   font-size: 1.3rem;
 }
 
-.m-menu a:hover { color: var(--gold); }
+.m-menu a:hover { color: var(--akzent); }
 
 /* ---------- Hero ---------- */
 
@@ -544,7 +544,7 @@
   position: absolute;
   width: 14px;
   height: 14px;
-  border: 1px solid var(--gold);
+  border: 1px solid var(--akzent);
   opacity: 0.55;
 }
 
@@ -563,7 +563,7 @@
 
 .m-stange-kappe {
   height: 10px;
-  background: linear-gradient(180deg, var(--gold-hell), var(--gold-tief));
+  background: linear-gradient(180deg, var(--akzent-hell), var(--akzent-tief));
   border-radius: 2px;
 }
 
@@ -600,7 +600,7 @@
   width: 154px;
   height: 154px;
   flex: none;
-  color: var(--gold);
+  color: var(--akzent);
   text-align: center;
   padding: 0 18px;
 }
@@ -608,19 +608,19 @@
 .m-siegel-ring {
   position: absolute;
   inset: 0;
-  color: var(--gold);
+  color: var(--akzent);
 }
 
 .m-siegel-wert {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   line-height: 1;
-  color: var(--gold-hell);
+  color: var(--akzent-hell);
   font-variant-numeric: tabular-nums;
 }
 
 .m-siegel-text {
-  font-size: 7.5px;
-  letter-spacing: 0.16em;
+  font-size: 7px;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--text-weich);
   line-height: 1.5;
@@ -658,7 +658,7 @@
 }
 
 .m-band-lauf span i {
-  color: var(--gold);
+  color: var(--akzent);
   font-style: normal;
   font-size: 0.6rem;
 }
@@ -706,7 +706,7 @@
 
 .m-zahl small {
   font-size: 0.9rem;
-  color: var(--gold);
+  color: var(--akzent);
 }
 
 /* ---------- Leistungsliste ---------- */
@@ -741,7 +741,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--gold);
+    background: var(--akzent);
     transform: scaleY(0);
     transform-origin: center;
     transition: transform 0.25s ease;
@@ -752,7 +752,7 @@
 .m-zeile-nr {
   font-family: var(--milano-display), "Didot", serif;
   font-size: 0.9rem;
-  color: var(--gold);
+  color: var(--akzent);
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
   grid-row: 1;
@@ -799,7 +799,7 @@
 .m-zeile-preis {
   font-family: var(--milano-display), "Didot", serif;
   font-size: 1.6rem;
-  color: var(--gold);
+  color: var(--akzent);
   text-align: right;
   font-variant-numeric: tabular-nums;
   grid-column: 3;
@@ -814,7 +814,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: var(--gold);
+  color: var(--akzent);
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -824,7 +824,7 @@
   transition: color 0.18s ease, border-color 0.18s ease;
 }
 
-.m-link-inline:hover { color: var(--gold-hell); border-color: var(--gold); }
+.m-link-inline:hover { color: var(--akzent-hell); border-color: var(--akzent); }
 
 /* ---------- Großes Zitat ---------- */
 
@@ -881,9 +881,9 @@
   z-index: 2;
 }
 
-.m-hell .m-eyebrow { color: var(--gold-tief); }
+.m-hell .m-eyebrow { color: var(--akzent-tief); }
 .m-hell .m-lead { color: var(--creme-weich); }
-.m-hell .m-zier { color: var(--gold-tief); }
+.m-hell .m-zier { color: var(--akzent-tief); }
 .m-hell .m-hinweis { color: #8b867c; }
 
 .m-hell-grid {
@@ -924,7 +924,7 @@
 
 .m-haken {
   flex: none;
-  color: var(--gold-tief);
+  color: var(--akzent-tief);
   margin-top: 3px;
 }
 
@@ -964,7 +964,7 @@
   background: radial-gradient(circle at 40% 30%, rgba(200, 163, 90, 0.14), transparent 65%);
   font-family: var(--milano-display), "Didot", serif;
   font-size: 1.7rem;
-  color: var(--gold);
+  color: var(--akzent);
 }
 
 /* ---------- Bildplätze ---------- */
@@ -991,7 +991,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--gold);
+  color: var(--akzent);
   transition: border-color 0.25s ease;
 }
 
@@ -1093,9 +1093,9 @@
   transition: color 0.18s ease;
 }
 
-.m-faq summary:hover { color: var(--gold); }
+.m-faq summary:hover { color: var(--akzent); }
 .m-faq summary::-webkit-details-marker { display: none; }
-.m-faq summary svg { flex: none; color: var(--gold); transition: transform 0.22s ease; }
+.m-faq summary svg { flex: none; color: var(--akzent); transition: transform 0.22s ease; }
 .m-faq details[open] summary svg { transform: rotate(180deg); }
 
 .m-faq p {
@@ -1138,7 +1138,7 @@
 }
 
 .m-footer-spalte a { transition: color 0.18s ease; }
-.m-footer-spalte a:hover { color: var(--gold); }
+.m-footer-spalte a:hover { color: var(--akzent); }
 
 .m-footer-titel {
   font-size: 9px;
@@ -1199,7 +1199,7 @@
 }
 
 .m-sticky a.m-sticky-primary {
-  background: linear-gradient(160deg, var(--gold-hell), var(--gold) 55%, var(--gold-tief));
+  background: linear-gradient(160deg, var(--akzent-hell), var(--akzent) 55%, var(--akzent-tief));
   border-color: transparent;
   color: #14110a;
   font-weight: 600;
@@ -1277,7 +1277,7 @@
 .m-book-fortschritt i {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--gold-tief), var(--gold));
+  background: linear-gradient(90deg, var(--akzent-tief), var(--akzent));
   transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1295,7 +1295,7 @@
   cursor: pointer;
 }
 
-.m-book-zurueck:hover { border-color: var(--gold-tief); color: var(--gold-tief); }
+.m-book-zurueck:hover { border-color: var(--akzent-tief); color: var(--akzent-tief); }
 
 .m-book-schritt {
   font-size: 9.5px;
@@ -1335,7 +1335,7 @@
   width: 5px;
   height: 5px;
   transform: translateY(-50%) rotate(45deg) scale(0);
-  background: var(--gold-tief);
+  background: var(--akzent-tief);
   transition: transform 0.2s ease;
 }
 
@@ -1377,7 +1377,7 @@
   transition: border-color 0.18s ease, background 0.18s ease;
 }
 
-.m-book-tag:hover:not(:disabled) { border-color: var(--gold-tief); }
+.m-book-tag:hover:not(:disabled) { border-color: var(--akzent-tief); }
 
 .m-book-tag[aria-pressed="true"] {
   background: var(--creme-text);
@@ -1415,7 +1415,7 @@
   transition: border-color 0.18s ease, background 0.18s ease;
 }
 
-.m-slot:hover { border-color: var(--gold-tief); }
+.m-slot:hover { border-color: var(--akzent-tief); }
 
 .m-slot[aria-pressed="true"] {
   background: var(--creme-text);
@@ -1451,7 +1451,7 @@
 .m-feld input:focus,
 .m-feld textarea:focus {
   outline: none;
-  border-bottom-color: var(--gold-tief);
+  border-bottom-color: var(--akzent-tief);
 }
 
 .m-book-fertig {
@@ -1500,7 +1500,7 @@
   gap: 12px;
   align-items: flex-start;
   padding: 14px 16px;
-  border-left: 2px solid var(--gold-tief);
+  border-left: 2px solid var(--akzent-tief);
   background: rgba(200, 163, 90, 0.07);
   font-size: 0.79rem;
   line-height: 1.55;
@@ -1517,7 +1517,7 @@
 }
 
 .m-book .m-btn-ghost { color: var(--creme-text); border-color: var(--creme-linie); }
-.m-book .m-btn-ghost:hover { color: var(--gold-tief); border-color: var(--gold-tief); background: transparent; }
+.m-book .m-btn-ghost:hover { color: var(--akzent-tief); border-color: var(--akzent-tief); background: transparent; }
 .m-book .m-hinweis { color: #8b867c; }
 
 /* ---------- Chat-Assistent ---------- */
@@ -1559,7 +1559,7 @@
   border-radius: 999px;
   border: 1px solid var(--hairline);
   background: radial-gradient(circle at 40% 30%, rgba(200, 163, 90, 0.2), transparent 65%);
-  color: var(--gold);
+  color: var(--akzent);
   font-family: var(--milano-display), "Didot", serif;
   font-size: 1.2rem;
 }
@@ -1592,7 +1592,7 @@
   height: 58px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(160deg, var(--gold-hell), var(--gold) 55%, var(--gold-tief));
+  background: linear-gradient(160deg, var(--akzent-hell), var(--akzent) 55%, var(--akzent-tief));
   color: #14110a;
   cursor: pointer;
   box-shadow: 0 12px 30px -8px rgba(200, 163, 90, 0.5);
@@ -1618,7 +1618,7 @@
   gap: 16px;
   align-items: flex-start;
   padding: 22px 24px;
-  border-left: 2px solid var(--gold);
+  border-left: 2px solid var(--akzent);
   background: rgba(200, 163, 90, 0.05);
   font-size: 0.92rem;
   line-height: 1.62;
@@ -1640,7 +1640,7 @@
 }
 
 .m-text p { margin: 0; color: var(--text-weich); }
-.m-text strong { color: var(--gold); font-weight: 400; }
+.m-text strong { color: var(--akzent); font-weight: 400; }
 
 @media (prefers-reduced-motion: reduce) {
   .milano *,
@@ -1661,3 +1661,263 @@
 /* Die Zeile 0,94 der großen Bodoni lässt Unterlängen aus dem Kasten ragen —
    das „g" von „geschnitten" landete sonst auf der Zierlinie darunter. */
 .m-h1 + .m-zier { margin-top: 14px; }
+
+/* ==========================================================================
+   Zweite Gestaltungsrichtung: „Studio"
+
+   Hell, ruhig, zeitgenössisch — wie Friseurstudios heute auftreten. Als
+   Akzent ein gedämpftes Larimar-Blau; der Stein, der dem Berliner Salon
+   den Namen gab, ist hellblau, das ist die naheliegende Farbe für diese
+   Richtung.
+
+   Umgesetzt fast ausschließlich über die Farbvariablen: Der Aufbau bleibt
+   derselbe, nur die Werte kippen. Was hart kodierte dunkle Werte hat,
+   wird darunter einzeln nachgezogen.
+   ========================================================================== */
+
+.milano[data-stil="studio"] {
+  --ink: #faf8f4;
+  --ink-2: #f2efe8;
+  --kohle: #ffffff;
+  --kohle-2: #f6f3ed;
+  --linie: #e6e1d7;
+  --hairline: rgba(63, 110, 120, 0.28);
+
+  --akzent: #4f8a96;
+  --akzent-hell: #8fb9c1;
+  --akzent-tief: #35606a;
+
+  --creme: #12161a;
+  --creme-linie: #e6e1d7;
+  --creme-text: #12161a;
+  --creme-weich: #5c6165;
+
+  --text: #14181b;
+  --text-weich: #565c60;
+  --text-leise: #6b716f;
+
+  --gruen: #3f8f68;
+  --gruen-hell: #2f6b4e;
+  --rot: #b8452f;
+  --rot-hell: #a03a26;
+
+  --radius: 4px;
+  --radius-gross: 10px;
+}
+
+/* Korn nimmt einer hellen Fläche die Sterilität, darf aber kaum sichtbar sein. */
+/* Die kleinen gesperrten Versalien sind echter Text, kein Zierrat — auf
+   hellem Papier braucht der Akzent dafür die dunklere Stufe. */
+.milano[data-stil="studio"] .m-eyebrow,
+.milano[data-stil="studio"] .m-link-inline {
+  color: var(--akzent-tief);
+}
+
+.milano[data-stil="studio"] .m-korn {
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+.milano[data-stil="studio"] .m-header {
+  background: rgba(250, 248, 244, 0.88);
+  border-bottom-color: var(--linie);
+}
+
+.milano[data-stil="studio"] .m-demoband {
+  border-bottom-color: var(--linie);
+}
+
+.milano[data-stil="studio"] .m-sticky {
+  background: rgba(250, 248, 244, 0.95);
+  border-top-color: var(--linie);
+}
+
+.milano[data-stil="studio"] .m-sticky a {
+  border-color: var(--linie);
+}
+
+/* Ränder und Trenner: auf hellem Grund braucht es echte Linien statt
+   aufgehellter Weißtöne. */
+.milano[data-stil="studio"] .m-zeile,
+.milano[data-stil="studio"] .m-zeile:last-child,
+.milano[data-stil="studio"] .m-zeiten div,
+.milano[data-stil="studio"] .m-zeiten div:last-child,
+.milano[data-stil="studio"] .m-faq details,
+.milano[data-stil="studio"] .m-faq details:last-child,
+.milano[data-stil="studio"] .m-blase,
+.milano[data-stil="studio"] .m-footer-fuss {
+  border-color: var(--linie);
+}
+
+/* Knöpfe: ruhige Fläche statt Metallverlauf. */
+.milano[data-stil="studio"] .m-btn-primary {
+  background: var(--text);
+  color: #faf8f4;
+}
+
+.milano[data-stil="studio"] .m-btn-primary:hover {
+  background: var(--akzent-tief);
+  filter: none;
+}
+
+.milano[data-stil="studio"] .m-btn-ghost {
+  border-color: rgba(20, 24, 27, 0.22);
+}
+
+.milano[data-stil="studio"] .m-btn-ghost:hover {
+  border-color: var(--akzent-tief);
+  color: var(--akzent-tief);
+  background: rgba(79, 138, 150, 0.05);
+}
+
+.milano[data-stil="studio"] .m-sticky a.m-sticky-primary,
+.milano[data-stil="studio"] .m-assistent-knopf {
+  background: var(--text);
+  color: #faf8f4;
+  box-shadow: 0 12px 28px -12px rgba(20, 24, 27, 0.5);
+}
+
+/* Flächen mit Lichtschein: auf hell wird daraus ein zarter Farbhauch. */
+.milano[data-stil="studio"] .m-hero::before {
+  background:
+    radial-gradient(60% 55% at 78% 26%, rgba(79, 138, 150, 0.13), transparent 70%),
+    radial-gradient(70% 60% at 8% 0%, rgba(214, 205, 190, 0.4), transparent 65%);
+}
+
+.milano[data-stil="studio"] .m-tafel,
+.milano[data-stil="studio"] .m-platte,
+.milano[data-stil="studio"] .m-adresstafel {
+  border-radius: var(--radius-gross);
+  background:
+    radial-gradient(110% 85% at 50% 0%, rgba(79, 138, 150, 0.09), transparent 62%),
+    linear-gradient(180deg, #ffffff, var(--ink-2));
+}
+
+.milano[data-stil="studio"] .m-medaillon {
+  background: radial-gradient(circle at 40% 30%, rgba(79, 138, 150, 0.16), transparent 65%);
+  border-color: rgba(79, 138, 150, 0.3);
+}
+
+.milano[data-stil="studio"] .m-zahlen,
+.milano[data-stil="studio"] .m-team {
+  border-radius: var(--radius-gross);
+  overflow: hidden;
+}
+
+.milano[data-stil="studio"] .m-band {
+  background: var(--ink-2);
+}
+
+/* Das große Zitat bleibt der ruhige Höhepunkt, nur eben auf Papier. */
+.milano[data-stil="studio"] .m-zitat {
+  background:
+    radial-gradient(80% 100% at 50% 0%, rgba(79, 138, 150, 0.1), transparent 70%),
+    var(--ink-2);
+}
+
+/* Umgekehrter Kontrastblock: Im hellen Stil wird der Buchungsabschnitt
+   dunkel — sonst hätte die Seite keinen einzigen kräftigen Moment. */
+.milano[data-stil="studio"] .m-hell {
+  background: #12161a;
+  color: #f2efe8;
+}
+
+.milano[data-stil="studio"] .m-hell .m-eyebrow { color: var(--akzent-hell); }
+.milano[data-stil="studio"] .m-hell .m-lead { color: #b8bcbd; }
+.milano[data-stil="studio"] .m-hell .m-zier { color: var(--akzent-hell); }
+.milano[data-stil="studio"] .m-hell .m-vorteile li { color: #dcdedd; border-top-color: rgba(255, 255, 255, 0.1); }
+.milano[data-stil="studio"] .m-hell .m-vorteile li:last-child { border-bottom-color: rgba(255, 255, 255, 0.1); }
+.milano[data-stil="studio"] .m-hell .m-haken { color: var(--akzent-hell); }
+
+/* Die Buchungskarte bleibt weiß — sie sitzt jetzt auf dunklem Grund. */
+.milano[data-stil="studio"] .m-book {
+  border-radius: var(--radius-gross);
+  box-shadow: 0 40px 80px -50px rgba(0, 0, 0, 0.7);
+}
+
+.milano[data-stil="studio"] .m-book .m-btn-dunkel {
+  background: #12161a;
+  color: #f6f3ed;
+}
+
+.milano[data-stil="studio"] .m-book .m-btn-dunkel:hover { background: var(--akzent-tief); }
+
+.milano[data-stil="studio"] .m-book-tag[aria-pressed="true"],
+.milano[data-stil="studio"] .m-slot[aria-pressed="true"] {
+  background: var(--akzent-tief);
+  border-color: var(--akzent-tief);
+  color: #ffffff;
+}
+
+.milano[data-stil="studio"] .m-book-option::before,
+.milano[data-stil="studio"] .m-book-fortschritt i {
+  background: var(--akzent-tief);
+}
+
+.milano[data-stil="studio"] .m-book-fortschritt i {
+  background: linear-gradient(90deg, var(--akzent-tief), var(--akzent));
+}
+
+.milano[data-stil="studio"] .m-demo-notiz {
+  border-left-color: var(--akzent-tief);
+  background: rgba(79, 138, 150, 0.08);
+}
+
+.milano[data-stil="studio"] .m-assistent-panel {
+  box-shadow: 0 30px 70px -30px rgba(20, 24, 27, 0.4);
+}
+
+.milano[data-stil="studio"] .m-infobox {
+  background: rgba(79, 138, 150, 0.07);
+}
+
+.milano[data-stil="studio"] .m-footer {
+  background: var(--ink-2);
+}
+
+.milano[data-stil="studio"] .m-tri {
+  background: linear-gradient(to right, #2f7a52 0 33%, #ffffff 33% 66%, #b02a1e 66%);
+}
+
+/* ---------- Stilwahl im Demoband ---------- */
+
+.m-stilwahl {
+  display: inline-flex;
+  margin-left: auto;
+  border: 1px solid var(--linie);
+  flex: none;
+}
+
+.m-stilwahl button {
+  font: inherit;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-leise);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.m-stilwahl button + button { border-left: 1px solid var(--linie); }
+
+.m-stilwahl button[aria-pressed="true"] {
+  background: var(--akzent);
+  color: var(--ink);
+}
+
+.milano[data-stil="studio"] .m-stilwahl button[aria-pressed="true"] {
+  background: var(--akzent-tief);
+  color: #ffffff;
+}
+
+/* Der Studio-Stil färbt den Weiter-Knopf dunkel — das darf den wartenden
+   Zustand nicht überschreiben, sonst sieht ein noch nicht klickbarer Knopf
+   nach „bereit" aus. */
+.milano[data-stil="studio"] .m-book .m-btn-dunkel:disabled {
+  background: transparent;
+  border: 1px dashed var(--creme-linie);
+  color: #a7a299;
+}

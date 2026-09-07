@@ -20,9 +20,9 @@ export function Monogramm({ size = 96 }: { size?: number }) {
     >
       <defs>
         <linearGradient id="m-gold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#EBD9A6" />
-          <stop offset="45%" stopColor="#C8A35A" />
-          <stop offset="100%" stopColor="#8A6B2E" />
+          <stop offset="0%" stopColor="var(--akzent-hell)" />
+          <stop offset="45%" stopColor="var(--akzent)" />
+          <stop offset="100%" stopColor="var(--akzent-tief)" />
         </linearGradient>
       </defs>
 
@@ -92,7 +92,7 @@ export function Siegel({ wert, anzahl }: { wert: string; anzahl: number }) {
       <span className="m-siegel-ring" aria-hidden="true">
         <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
           <circle cx="50" cy="50" r="47" stroke="currentColor" strokeWidth="0.8" opacity="0.6" />
-          <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="0.4" opacity="0.35" />
+          <circle cx="50" cy="50" r="43.5" stroke="currentColor" strokeWidth="0.4" opacity="0.35" />
         </svg>
       </span>
       <span className="m-siegel-wert m-display">{wert}</span>

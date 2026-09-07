@@ -322,7 +322,7 @@ export default function MilanoStartseite() {
                 gap: 16,
               }}
             >
-              <span style={{ color: "var(--gold)", display: "flex", gap: 3 }}>
+              <span style={{ color: "var(--akzent)", display: "flex", gap: 3 }}>
                 {[0, 1, 2, 3, 4].map((i) => (
                   <Icon key={i} name="stern" size={13} gefuellt />
                 ))}
@@ -389,7 +389,7 @@ export default function MilanoStartseite() {
               {salon.plz} {salon.ort}
             </p>
             <Zierlinie />
-            <a href={`tel:${salon.telefonLink}`} className="m-num" style={{ color: "var(--gold)" }}>
+            <a href={`tel:${salon.telefonLink}`} className="m-num" style={{ color: "var(--akzent)" }}>
               {salon.telefon}
             </a>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
