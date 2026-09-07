@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Bodoni_Moda, Geist } from "next/font/google";
 import { Header } from "@/components/milano/Header";
 import { Assistant } from "@/components/milano/Assistant";
+import { Reveal } from "@/components/milano/Reveal";
+import { Monogramm } from "@/components/milano/Brand";
 import { Icon } from "@/components/milano/Icon";
 import { salon } from "@/lib/milano/content";
 import "./milano.css";
@@ -36,11 +38,17 @@ export const metadata: Metadata = {
 export default function MilanoLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`milano ${bodoni.variable} ${geist.variable}`}>
+      <span className="m-korn" aria-hidden="true" />
+      <Reveal />
+
       <div className="m-demoband">
         <div className="m-container">
           <span className="m-demoband-pol" aria-hidden="true" />
           <span>
-            Entwurf von westfaliadigital · keine offizielle Seite von {salon.name}
+            Entwurf von westfaliadigital
+            <span className="m-demoband-lang">
+              {" "}· keine offizielle Seite von {salon.name}
+            </span>
           </span>
         </div>
       </div>
@@ -53,9 +61,12 @@ export default function MilanoLayout({ children }: { children: React.ReactNode }
         <div className="m-container">
           <div className="m-footer-grid">
             <div className="m-footer-spalte">
-              <span className="m-brand" style={{ marginBottom: 6 }}>
-                <span className="m-brand-name m-display">{salon.kurz}</span>
-                <span className="m-brand-sub">Friseur · Geldern</span>
+              <span className="m-brand" style={{ marginBottom: 10 }}>
+                <Monogramm size={44} />
+                <span className="m-brand-text">
+                  <span className="m-brand-name m-display">{salon.kurz}</span>
+                  <span className="m-brand-sub">Friseur · Geldern</span>
+                </span>
               </span>
               <span>
                 {salon.strasse}, {salon.plz} {salon.ort}
@@ -69,9 +80,7 @@ export default function MilanoLayout({ children }: { children: React.ReactNode }
             </div>
 
             <div className="m-footer-spalte">
-              <span className="m-eyebrow" style={{ marginBottom: 4 }}>
-                Seite
-              </span>
+              <span className="m-footer-titel">Seite</span>
               <Link href="/milano/leistungen">Leistungen</Link>
               <Link href="/milano#team">Team</Link>
               <Link href="/milano#arbeiten">Arbeiten</Link>
@@ -79,11 +88,19 @@ export default function MilanoLayout({ children }: { children: React.ReactNode }
             </div>
 
             <div className="m-footer-spalte">
-              <span className="m-eyebrow" style={{ marginBottom: 4 }}>
-                Rechtliches
-              </span>
+              <span className="m-footer-titel">Rechtliches</span>
               <Link href="/milano/impressum">Impressum</Link>
               <Link href="/milano/datenschutz">Datenschutz</Link>
+            </div>
+
+            <div className="m-footer-spalte">
+              <span className="m-footer-titel">Folgen</span>
+              <a href={salon.instagramUrl} target="_blank" rel="noreferrer noopener">
+                Instagram
+              </a>
+              <a href={salon.mapsUrl} target="_blank" rel="noreferrer noopener">
+                Route
+              </a>
             </div>
           </div>
 

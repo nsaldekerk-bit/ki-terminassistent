@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { salon } from "@/lib/milano/content";
+import { Zierlinie } from "@/components/milano/Brand";
 
 export const metadata: Metadata = {
   title: `Datenschutz — ${salon.name}`,
@@ -12,7 +13,7 @@ export default function DatenschutzSeite() {
       <div className="m-section-head">
         <p className="m-eyebrow">Rechtliches</p>
         <h1 className="m-h2">Datenschutz</h1>
-        <hr className="m-rule" />
+        <Zierlinie />
       </div>
 
       <div className="m-text">

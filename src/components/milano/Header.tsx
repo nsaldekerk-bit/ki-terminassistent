@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "./Icon";
+import { Monogramm } from "./Brand";
 import { salon } from "@/lib/milano/content";
 
 const NAV = [
@@ -19,8 +20,11 @@ export function Header() {
     <header className="m-header">
       <div className="m-container m-header-inner">
         <Link href="/milano" className="m-brand" onClick={() => setOffen(false)}>
-          <span className="m-brand-name m-display">{salon.kurz}</span>
-          <span className="m-brand-sub">Friseur · Geldern</span>
+          <Monogramm size={42} />
+          <span className="m-brand-text">
+            <span className="m-brand-name m-display">{salon.kurz}</span>
+            <span className="m-brand-sub">Friseur · Geldern</span>
+          </span>
         </Link>
 
         <nav className="m-nav" aria-label="Hauptnavigation">
