@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Zierlinie } from "@/components/milano/Brand";
 import { Icon } from "@/components/milano/Icon";
 import {
   kategorien,
@@ -20,15 +19,10 @@ export const metadata: Metadata = {
 export default function LeistungenSeite() {
   return (
     <section className="m-container m-section">
-      <div className="m-section-head">
+      <div className="m-section-kopf m-section-kopf-zentriert">
         <p className="m-eyebrow">Leistungen &amp; Preise</p>
-        <h1 className="m-h1" style={{ fontSize: "clamp(2.6rem, 8vw, 4.6rem)" }}>
-          Alles, was
-          <br />
-          hier geschnitten wird.
-        </h1>
-        <Zierlinie breit />
-        <p className="m-lead" style={{ marginTop: 4 }}>
+        <h1 className="m-titel m-titel-xl">Alles, was hier geschnitten wird.</h1>
+        <p className="m-fliess" style={{ textAlign: "center" }}>
           Preise inklusive Waschen und Styling. Bei jeder Leistung steht, wie lange sie dauert
           — der Kalender rechnet damit, sodass keine Wartezeit entsteht.
         </p>
@@ -39,24 +33,28 @@ export default function LeistungenSeite() {
         if (eintraege.length === 0) return null;
 
         return (
-          <div key={kategorie.key} className="m-preis-gruppe">
-            <div className="m-preis-kopf">
-              <h2 className="m-h2" style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)" }}>
-                {kategorie.name}
-              </h2>
+          <div key={kategorie.key} style={{ marginBottom: 46 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 16,
+                paddingBottom: 14,
+              }}
+            >
+              <h2 className="m-titel m-titel-l">{kategorie.name}</h2>
               <span className="m-eyebrow">
                 {eintraege.length} {eintraege.length === 1 ? "Leistung" : "Leistungen"}
               </span>
             </div>
 
             <div className="m-liste">
-              {eintraege.map((l, i) => (
+              {eintraege.map((l) => (
                 <Link key={l.id} href={`/milano/termin?leistung=${l.id}`} className="m-zeile">
-                  <span className="m-zeile-nr">{String(i + 1).padStart(2, "0")}</span>
                   <span className="m-zeile-name">{l.name}</span>
                   <span className="m-zeile-desc">{l.beschreibung}</span>
                   <span className="m-zeile-dauer m-num">{l.minuten} Min.</span>
-                  <span className="m-zeile-preis">{preis(l.preisCent)}</span>
+                  <span className="m-zeile-preis m-num">{preis(l.preisCent)}</span>
                 </Link>
               ))}
             </div>
@@ -66,8 +64,8 @@ export default function LeistungenSeite() {
 
       {PREISE_BESTAETIGT ? null : (
         <p className="m-infobox">
-          <span style={{ flex: "none", color: "var(--akzent)", marginTop: 3 }}>
-            <Icon name="stern" size={17} gefuellt />
+          <span style={{ flex: "none", marginTop: 3 }}>
+            <Icon name="stern" size={16} gefuellt />
           </span>
           <span>
             Sämtliche Preise und Dauern auf dieser Seite sind{" "}

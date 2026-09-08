@@ -29,7 +29,7 @@ export function Assistant() {
                   alignItems: "center",
                   gap: 5,
                   fontSize: "0.72rem",
-                  color: "var(--text-leise)",
+                  color: "var(--text-grau)",
                 }}
               >
                 <span
@@ -51,7 +51,7 @@ export function Assistant() {
               style={{
                 background: "transparent",
                 border: "none",
-                color: "var(--text-leise)",
+                color: "var(--text-grau)",
                 cursor: "pointer",
                 display: "grid",
                 placeItems: "center",
@@ -69,7 +69,7 @@ export function Assistant() {
             ))}
           </div>
 
-          <p className="m-hinweis" style={{ marginTop: 2 }}>
+          <p className="m-mini" style={{ marginTop: 2 }}>
             Vorschau — der Assistent wird im nächsten Schritt angeschlossen.
           </p>
         </div>

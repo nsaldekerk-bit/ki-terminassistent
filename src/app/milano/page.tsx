@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Booking } from "@/components/milano/Booking";
-import { Ecken, Monogramm, Siegel, Stange, Zierlinie } from "@/components/milano/Brand";
+import { Carousel } from "@/components/milano/Carousel";
+import { Monogramm, Signatur } from "@/components/milano/Brand";
 import { Icon } from "@/components/milano/Icon";
-import { OpenStatus } from "@/components/milano/OpenStatus";
 import {
   bewertungen,
   faq,
@@ -10,423 +10,304 @@ import {
   oeffnungszeiten,
   preis,
   salon,
-  team,
   wochentage,
   PREISE_BESTAETIGT,
-  TEAM_BESTAETIGT,
   ZEITEN_BESTAETIGT,
 } from "@/lib/milano/content";
 
-/** Für das Laufband — zweimal ausgegeben, damit die Schleife nahtlos läuft. */
-const BAND = [
-  "Haarschnitt",
-  "Fade",
-  "Skin Fade",
-  "Bart",
-  "Messerrasur",
-  "Konturen",
-  "Kinderschnitt",
-  "Kopfrasur",
-];
-
-const PLATTEN = [
-  { titel: "Fade", sub: "Verlauf & Kante" },
-  { titel: "Bart", sub: "Form & Pflege" },
-  { titel: "Klassiker", sub: "Schere & Kamm" },
-  { titel: "Kinder", sub: "ohne Hektik" },
-];
+const STREIFEN = ["Fade", "Bart", "Klassiker", "Kinder", "Messerrasur"];
 
 export default function MilanoStartseite() {
-  const [gross, ...weitere] = bewertungen;
-
   return (
     <>
-      {/* ---------- Hero ---------- */}
-      <section className="m-hero">
-        <div className="m-container m-hero-grid">
-          <div className="m-hero-body" data-reveal>
-            <OpenStatus />
+      <Carousel />
 
-            <h1 className="m-h1">
-              Fade, Bart
-              <br />
-              und der klassische
-              <br />
-              <span className="m-kursiv">Schnitt.</span>
-            </h1>
-
-            <Zierlinie breit />
-
-            <p className="m-lead">
-              {salon.name} an der {salon.strasse} in {salon.ort}. Seit Jahren einer der am
-              besten bewerteten Läden der Stadt — ab jetzt mit einem Termin, den du selbst
-              buchst.
-            </p>
-
-            <div className="m-hero-cta">
-              <Link href="/milano/termin" className="m-btn m-btn-primary">
-                Termin buchen
-              </Link>
-              <a href={`tel:${salon.telefonLink}`} className="m-btn m-btn-ghost m-num">
-                <Icon name="telefon" size={16} />
-                {salon.telefon}
-              </a>
-            </div>
+      {/* ---------- Drei Karten ---------- */}
+      <section className="m-section" style={{ paddingTop: 56 }}>
+        <div className="m-container">
+          <div style={{ textAlign: "center", marginBottom: 34 }}>
+            <Signatur>Milano</Signatur>
           </div>
 
-          <div className="m-tafel" data-reveal>
-            <Ecken />
-            <Monogramm size={132} />
-            <div className="m-tafel-reihe">
-              <Stange hoehe={132} />
-              <Siegel wert={salon.bewertung} anzahl={salon.bewertungenAnzahl} />
-              <Stange hoehe={132} />
+          <div className="m-karten" data-reveal>
+            <div className="m-karte">
+              <span className="m-karte-bild" aria-hidden="true">
+                <Monogramm size={110} />
+              </span>
+              <h2 className="m-titel m-titel-m">Unsere Preisliste</h2>
+              <p className="m-fliess">
+                Was wir genau anbieten? Hier findest du alle Leistungen und eine
+                Preisübersicht.
+              </p>
+              <Link href="/milano/leistungen" className="m-knopf m-knopf-dunkel">
+                Unsere Leistungen &amp; Preise
+              </Link>
             </div>
-            <span className="m-platte-sub">Issumer Straße · Geldern</span>
+
+            <div className="m-karte">
+              <span className="m-karte-bild" aria-hidden="true">
+                <Monogramm size={110} />
+              </span>
+              <h2 className="m-titel m-titel-m">{salon.name}</h2>
+              <p className="m-fliess">
+                Entdecke unseren Laden an der {salon.strasse} — wo Handwerk auf Präzision
+                trifft.
+              </p>
+              <Link href="/milano#studio" className="m-knopf m-knopf-dunkel">
+                Erfahre Mehr Über Uns
+              </Link>
+            </div>
+
+            <div className="m-karte m-karte-dunkel">
+              <span className="m-karte-bild" aria-hidden="true">
+                <Monogramm size={110} />
+              </span>
+              <h2 className="m-titel m-titel-m">Termin buchen</h2>
+              <p className="m-fliess">
+                Jetzt Termin buchen für deinen Signature Cut by {salon.name}.
+              </p>
+              <Link href="/milano/termin" className="m-knopf m-knopf-hell">
+                Buche Dir Jetzt Einen Termin!
+              </Link>
+            </div>
           </div>
         </div>
       </section>
-
-      {/* ---------- Laufband ---------- */}
-      <div className="m-band" aria-hidden="true">
-        <div className="m-band-lauf">
-          <span>
-            {BAND.map((w) => (
-              <span key={w} style={{ display: "contents" }}>
-                {w}
-                <i>◆</i>
-              </span>
-            ))}
-          </span>
-          <span>
-            {BAND.map((w) => (
-              <span key={w} style={{ display: "contents" }}>
-                {w}
-                <i>◆</i>
-              </span>
-            ))}
-          </span>
-        </div>
-      </div>
-
-      {/* ---------- Kennzahlen ---------- */}
-      <div className="m-container" style={{ paddingTop: 64 }}>
-        <div className="m-zahlen" data-reveal>
-          <div>
-            <span className="m-zahl">
-              {salon.bewertung}
-              <small>
-                <Icon name="stern" size={16} gefuellt />
-              </small>
-            </span>
-            <span className="m-eyebrow">bei Google</span>
-          </div>
-          <div>
-            <span className="m-zahl">{salon.bewertungenAnzahl}</span>
-            <span className="m-eyebrow">Bewertungen</span>
-          </div>
-          <div>
-            <span className="m-zahl">24/7</span>
-            <span className="m-eyebrow">buchbar</span>
-          </div>
-          <div>
-            <span className="m-zahl" style={{ fontSize: "1.5rem" }}>
-              <span className="m-ph">[DE · TR · EN]</span>
-            </span>
-            <span className="m-eyebrow">wir sprechen</span>
-          </div>
-        </div>
-      </div>
 
       {/* ---------- Leistungen ---------- */}
-      <section className="m-container m-section" id="leistungen">
-        <div className="m-section-head-row" data-reveal>
-          <div className="m-section-head">
+      <section className="m-section" id="leistungen" style={{ paddingTop: 0 }}>
+        <div className="m-container">
+          <div className="m-section-kopf m-section-kopf-zentriert" data-reveal>
             <p className="m-eyebrow">Leistungen</p>
-            <h2 className="m-h2">Was wir machen.</h2>
-            <Zierlinie />
+            <h2 className="m-titel m-titel-xl">Was wir machen.</h2>
           </div>
-          <Link href="/milano/leistungen" className="m-link-inline">
-            Vollständige Preisliste
-            <Icon name="pfeil-rechts" size={14} />
-          </Link>
-        </div>
 
-        <div className="m-liste" data-reveal>
-          {leistungen.slice(0, 6).map((l, i) => (
-            <Link key={l.id} href={`/milano/termin?leistung=${l.id}`} className="m-zeile">
-              <span className="m-zeile-nr">{String(i + 1).padStart(2, "0")}</span>
-              <span className="m-zeile-name">{l.name}</span>
-              <span className="m-zeile-desc">{l.beschreibung}</span>
-              <span className="m-zeile-dauer m-num">{l.minuten} Min.</span>
-              <span className="m-zeile-preis">{preis(l.preisCent)}</span>
+          <div className="m-liste" data-reveal>
+            {leistungen.slice(0, 6).map((l) => (
+              <Link key={l.id} href={`/milano/termin?leistung=${l.id}`} className="m-zeile">
+                <span className="m-zeile-name">{l.name}</span>
+                <span className="m-zeile-desc">{l.beschreibung}</span>
+                <span className="m-zeile-dauer m-num">{l.minuten} Min.</span>
+                <span className="m-zeile-preis m-num">{preis(l.preisCent)}</span>
+              </Link>
+            ))}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 20,
+              marginTop: 26,
+              flexWrap: "wrap",
+            }}
+          >
+            <Link href="/milano/leistungen" className="m-link-inline">
+              Vollständige Preisliste
+              <Icon name="pfeil-rechts" size={14} />
             </Link>
-          ))}
+            {PREISE_BESTAETIGT ? null : (
+              <p className="m-mini">
+                Beispielpreise — werden durch die echte Preisliste des Salons ersetzt.
+              </p>
+            )}
+          </div>
         </div>
-
-        {PREISE_BESTAETIGT ? null : (
-          <p className="m-hinweis">
-            Beispielpreise — werden durch die echte Preisliste des Salons ersetzt.
-          </p>
-        )}
       </section>
 
-      {/* ---------- Großes Zitat ---------- */}
-      <section className="m-zitat">
-        <div className="m-container m-zitat-inner" data-reveal>
-          <Zierlinie breit />
-          <blockquote className="m-display">„{gross.text}“</blockquote>
-          <cite>
-            {gross.autor} · {gross.quelle}
-          </cite>
+      {/* ---------- Studio ---------- */}
+      <section className="m-section" id="studio" style={{ paddingTop: 0 }}>
+        <div className="m-container">
+          <div className="m-karten" style={{ gridTemplateColumns: "1fr" }} data-reveal>
+            <div
+              className="m-karte"
+              style={{ minHeight: 0, display: "grid", gap: 34, alignItems: "center" }}
+            >
+              <div className="m-studio-grid">
+                <span className="m-karte-bild" aria-hidden="true" style={{ minHeight: 220 }}>
+                  <Monogramm size={168} />
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <p className="m-eyebrow">Das Studio</p>
+                  <h2 className="m-titel m-titel-l">{salon.name} in {salon.ort}.</h2>
+                  <p className="m-fliess">
+                    Wir sitzen an der {salon.strasse}, mitten in {salon.ort}. Herrenschnitte,
+                    Fades, Bart und Kinder — ohne Hektik, dafür sauber. Bei Google stehen wir
+                    bei {salon.bewertung} von 5 Sternen aus {salon.bewertungenAnzahl}{" "}
+                    Bewertungen.
+                  </p>
+
+                  <dl className="m-zeiten-mini">
+                    {wochentage.map((tag) => {
+                      const zeit = oeffnungszeiten[tag.key];
+                      return (
+                        <div key={tag.key}>
+                          <dt>{tag.kurz}</dt>
+                          <dd className="m-num">
+                            {zeit ? (
+                              ZEITEN_BESTAETIGT ? (
+                                `${zeit.von}–${zeit.bis}`
+                              ) : (
+                                <span className="m-ph">
+                                  [{zeit.von}–{zeit.bis}]
+                                </span>
+                              )
+                            ) : (
+                              "geschlossen"
+                            )}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4 }}>
+                    <a
+                      href={salon.mapsUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="m-knopf m-knopf-dunkel"
+                    >
+                      Route Öffnen
+                    </a>
+                    <a href={`tel:${salon.telefonLink}`} className="m-knopf m-knopf-linie">
+                      Anrufen
+                    </a>
+                  </div>
+
+                  {ZEITEN_BESTAETIGT ? null : (
+                    <p className="m-mini">
+                      Zeiten in Klammern sind Platzhalter — Google kennt bisher nur „öffnet Mo
+                      09:00“.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ---------- Buchung ---------- */}
-      <section className="m-hell" id="termin">
-        <div className="m-container m-hell-grid">
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }} data-reveal>
+      <section className="m-section" id="termin" style={{ paddingTop: 0 }}>
+        <div className="m-container">
+          <div className="m-section-kopf m-section-kopf-zentriert" data-reveal>
             <p className="m-eyebrow">Termin</p>
-            <h2 className="m-h2">
-              Buchen, während
-              <br />
-              der Laden zu ist.
-            </h2>
-            <Zierlinie />
-            <p className="m-lead">
+            <h2 className="m-titel m-titel-xl">Buche deinen Platz.</h2>
+            <p className="m-fliess" style={{ textAlign: "center" }}>
               Freie Zeiten kommen direkt aus dem Kalender des Salons. Kein Rückruf, keine
-              Warteschleife — und wer absagen will, macht das selbst über den Link in der
-              Bestätigung.
+              Warteschleife — und absagen kannst du selbst.
             </p>
-            <ul className="m-vorteile">
-              <li>
-                <span className="m-haken" aria-hidden="true">
-                  <Icon name="haken" size={15} />
-                </span>
-                Erinnerung einen Tag vorher — weniger leere Stühle.
-              </li>
-              <li>
-                <span className="m-haken" aria-hidden="true">
-                  <Icon name="haken" size={15} />
-                </span>
-                Jeder Stuhl hat seinen eigenen Kalender.
-              </li>
-              <li>
-                <span className="m-haken" aria-hidden="true">
-                  <Icon name="haken" size={15} />
-                </span>
-                Urlaub eintragen — die Tage verschwinden aus der Auswahl.
-              </li>
-            </ul>
           </div>
 
-          <div data-reveal>
+          <div style={{ maxWidth: 620, margin: "0 auto" }} data-reveal>
             <Booking />
           </div>
         </div>
       </section>
 
-      {/* ---------- Team ---------- */}
-      <section className="m-container m-section" id="team">
-        <div className="m-section-head" data-reveal>
-          <p className="m-eyebrow">Team</p>
-          <h2 className="m-h2">Wer schneidet.</h2>
-          <Zierlinie />
-        </div>
-
-        <div className="m-team" data-reveal>
-          {team.map((m) => (
-            <div key={m.id} className="m-team-karte">
-              <span className="m-medaillon" aria-hidden="true">
-                M
-              </span>
-              <span className="m-h3">
-                {TEAM_BESTAETIGT ? m.name : <span className="m-ph">[{m.name}]</span>}
-              </span>
-              <span className="m-platte-sub">{m.schwerpunkt}</span>
-              <span style={{ fontSize: "0.84rem", color: "var(--text-weich)" }}>
-                {TEAM_BESTAETIGT ? m.sprachen : <span className="m-ph">[{m.sprachen}]</span>}
-              </span>
-              <Link href="/milano/termin" className="m-link-inline" style={{ marginTop: 8 }}>
-                Bei mir buchen
-                <Icon name="pfeil-rechts" size={13} />
-              </Link>
-            </div>
-          ))}
-        </div>
-
-        {TEAM_BESTAETIGT ? null : (
-          <p className="m-hinweis">Namen, Fotos und Sprachen kommen vom Inhaber.</p>
-        )}
-      </section>
-
-      {/* ---------- Arbeiten ---------- */}
-      <section className="m-container m-section" id="arbeiten" style={{ paddingTop: 0 }}>
-        <div className="m-section-head-row" data-reveal>
-          <div className="m-section-head">
-            <p className="m-eyebrow">Arbeiten</p>
-            <h2 className="m-h2">Aus dem Salon.</h2>
-            <Zierlinie />
-          </div>
-          <a
-            href={salon.instagramUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="m-link-inline"
-          >
-            <Icon name="instagram" size={15} />@{salon.instagram}
-          </a>
-        </div>
-
-        <div className="m-platten" data-reveal>
-          {PLATTEN.map((p) => (
-            <div key={p.titel} className="m-platte">
-              <Ecken />
-              <Monogramm size={54} />
-              <span className="m-platte-titel">{p.titel}</span>
-              <span className="m-platte-sub">{p.sub}</span>
-            </div>
-          ))}
-        </div>
-
-        <p className="m-hinweis">
-          Diese vier Tafeln sind für die echten Salonfotos reserviert — sie treten an dieselbe
-          Stelle, ohne dass sich am Aufbau etwas ändert.
-        </p>
-      </section>
-
-      {/* ---------- Weitere Bewertungen ---------- */}
-      <section className="m-container m-section" id="bewertungen" style={{ paddingTop: 0 }}>
-        <div className="m-section-head" data-reveal>
-          <p className="m-eyebrow">Bewertungen</p>
-          <h2 className="m-h2">
-            {salon.bewertung} von 5 — aus {salon.bewertungenAnzahl} Stimmen.
-          </h2>
-          <Zierlinie />
-        </div>
-
-        <div
-          style={{ display: "grid", gap: 1, background: "var(--linie)", border: "1px solid var(--linie)" }}
-          data-reveal
-          className="m-reviews-grid"
-        >
-          {weitere.map((b) => (
-            <figure
-              key={b.autor}
-              style={{
-                margin: 0,
-                background: "var(--ink)",
-                padding: "34px 28px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
-            >
-              <span style={{ color: "var(--akzent)", display: "flex", gap: 3 }}>
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Icon key={i} name="stern" size={13} gefuellt />
-                ))}
-              </span>
-              <blockquote
-                className="m-display"
-                style={{ margin: 0, fontSize: "1.4rem", lineHeight: 1.3 }}
-              >
-                „{b.text}“
-              </blockquote>
-              <figcaption className="m-platte-sub" style={{ marginTop: "auto" }}>
-                {b.autor} · {b.quelle}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
-      {/* ---------- Öffnungszeiten & Anfahrt ---------- */}
-      <section className="m-container m-section" id="anfahrt" style={{ paddingTop: 0 }}>
-        <div className="m-anfahrt">
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }} data-reveal>
-            <p className="m-eyebrow">Öffnungszeiten</p>
-            <h2 className="m-h2">Wann wir da sind.</h2>
-            <Zierlinie />
-
-            <dl className="m-zeiten">
-              {wochentage.map((tag) => {
-                const zeit = oeffnungszeiten[tag.key];
-                return (
-                  <div key={tag.key}>
-                    <dt>{tag.lang}</dt>
-                    <dd className="m-num">
-                      {zeit ? (
-                        ZEITEN_BESTAETIGT ? (
-                          `${zeit.von} – ${zeit.bis}`
-                        ) : (
-                          <span className="m-ph">
-                            [{zeit.von} – {zeit.bis}]
-                          </span>
-                        )
-                      ) : (
-                        <span style={{ color: "var(--text-leise)" }}>Geschlossen</span>
-                      )}
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-
-            {ZEITEN_BESTAETIGT ? null : (
-              <p className="m-hinweis">
-                Zeiten in Klammern sind Platzhalter — Google kennt bisher nur „öffnet Mo 09:00“.
+      {/* ---------- FAQ auf dunklem Grund ---------- */}
+      <section className="m-dunkel" id="faq">
+        <div className="m-container m-section">
+          <div className="m-faq-grid">
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }} data-reveal>
+              <h2 className="m-titel m-titel-l">Häufig gestellte Fragen.</h2>
+              <p className="m-fliess">
+                Du hast eine Frage oder ein Anliegen? Hier findest du Antworten zu Fragen, die
+                wir oft gestellt bekommen.
               </p>
-            )}
-          </div>
-
-          <div className="m-adresstafel" data-reveal>
-            <Ecken />
-            <Monogramm size={72} />
-            <p className="m-adresstafel-zeile" style={{ margin: 0 }}>
-              {salon.strasse}
-              <br />
-              {salon.plz} {salon.ort}
-            </p>
-            <Zierlinie />
-            <a href={`tel:${salon.telefonLink}`} className="m-num" style={{ color: "var(--akzent)" }}>
-              {salon.telefon}
-            </a>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
               <a
-                href={salon.mapsUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="m-btn m-btn-ghost"
+                href={`tel:${salon.telefonLink}`}
+                className="m-knopf m-knopf-hell"
+                style={{ alignSelf: "flex-start" }}
               >
-                <Icon name="pin" size={15} />
-                Route öffnen
+                Kontaktiere Uns
               </a>
             </div>
-            <span className="m-platte-sub">Karte lädt erst nach Klick</span>
+
+            <div className="m-faq" data-reveal>
+              {faq.map((eintrag) => (
+                <details key={eintrag.frage}>
+                  <summary>
+                    {eintrag.frage}
+                    <span className="m-faq-plus" aria-hidden="true" />
+                  </summary>
+                  <p>{eintrag.antwort}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ---------- FAQ ---------- */}
-      <section className="m-container m-section" id="faq" style={{ paddingTop: 0 }}>
-        <div className="m-section-head" data-reveal>
-          <p className="m-eyebrow">Häufige Fragen</p>
-          <h2 className="m-h2">Kurz gefragt.</h2>
-          <Zierlinie />
-        </div>
+      {/* ---------- Bilderstreifen ---------- */}
+      <section className="m-section" id="galerie">
+        <div className="m-container">
+          <div className="m-section-kopf m-section-kopf-zentriert" data-reveal>
+            <p className="m-eyebrow">Galerie</p>
+            <h2 className="m-titel m-titel-xl">Aus dem Salon.</h2>
+          </div>
 
-        <div className="m-faq" data-reveal>
-          {faq.map((eintrag) => (
-            <details key={eintrag.frage}>
-              <summary>
-                {eintrag.frage}
-                <Icon name="chevron-unten" size={17} />
-              </summary>
-              <p>{eintrag.antwort}</p>
-            </details>
-          ))}
+          <div className="m-streifen" data-reveal>
+            {STREIFEN.map((titel) => (
+              <div className="m-streifen-platte" key={titel}>
+                <Monogramm size={64} />
+                <span className="m-streifen-titel">{titel}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="m-mini" style={{ marginTop: 18, textAlign: "center" }}>
+            Diese Flächen sind für die echten Salonfotos reserviert — sie treten an dieselbe
+            Stelle, ohne dass sich am Aufbau etwas ändert.
+          </p>
         </div>
+      </section>
+
+      {/* ---------- Bewertungen ---------- */}
+      <section className="m-section" id="bewertungen" style={{ paddingTop: 0 }}>
+        <div className="m-container">
+          <div className="m-section-kopf m-section-kopf-zentriert" data-reveal>
+            <p className="m-eyebrow">Bewertungen</p>
+            <h2 className="m-titel m-titel-xl">
+              {salon.bewertung} von 5 bei Google.
+            </h2>
+          </div>
+
+          <div className="m-karten" data-reveal>
+            {bewertungen.map((b) => (
+              <figure key={b.autor} className="m-karte" style={{ minHeight: 0, gap: 16 }}>
+                <span style={{ display: "flex", gap: 3 }} aria-label="5 von 5 Sternen">
+                  {[0, 1, 2, 3, 4].map((s) => (
+                    <Icon key={s} name="stern" size={13} gefuellt />
+                  ))}
+                </span>
+                <blockquote
+                  className="m-titel m-titel-m"
+                  style={{ margin: 0, letterSpacing: "0.06em", lineHeight: 1.35 }}
+                >
+                  „{b.text}“
+                </blockquote>
+                <figcaption className="m-mini" style={{ marginTop: "auto" }}>
+                  {b.autor} · {b.quelle}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Schlusszeile ---------- */}
+      <section className="m-container m-schluss">
+        <h2 className="m-titel m-titel-xl" data-reveal>
+          Dein nächster Termin
+          <br />
+          bei {salon.name}.
+        </h2>
+        <Link href="/milano/termin" className="m-knopf m-knopf-dunkel" data-reveal>
+          Buche Dir Jetzt Einen Termin!
+        </Link>
       </section>
     </>
   );

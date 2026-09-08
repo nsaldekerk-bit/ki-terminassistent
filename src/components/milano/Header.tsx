@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "./Icon";
-import { Monogramm } from "./Brand";
+import { Wortmarke } from "./Brand";
 import { salon } from "@/lib/milano/content";
 
 const NAV = [
-  { href: "/milano/leistungen", label: "Leistungen" },
-  { href: "/milano#team", label: "Team" },
-  { href: "/milano#arbeiten", label: "Arbeiten" },
-  { href: "/milano#anfahrt", label: "Anfahrt" },
+  { href: "/milano/leistungen", label: "Leistungen & Preise" },
+  { href: "/milano#studio", label: "Milano Studio" },
+  { href: "/milano#galerie", label: "Galerie" },
+  { href: "/milano/termin", label: "Termin buchen" },
+  { href: "/milano#kontakt", label: "Kontakt" },
 ];
 
 export function Header() {
@@ -19,12 +20,8 @@ export function Header() {
   return (
     <header className="m-header">
       <div className="m-container m-header-inner">
-        <Link href="/milano" className="m-brand" onClick={() => setOffen(false)}>
-          <Monogramm size={42} />
-          <span className="m-brand-text">
-            <span className="m-brand-name m-display">{salon.kurz}</span>
-            <span className="m-brand-sub">Friseur · Geldern</span>
-          </span>
+        <Link href="/milano" onClick={() => setOffen(false)} aria-label={salon.name}>
+          <Wortmarke />
         </Link>
 
         <nav className="m-nav" aria-label="Hauptnavigation">
@@ -41,12 +38,8 @@ export function Header() {
             href={`tel:${salon.telefonLink}`}
             aria-label={`Anrufen: ${salon.telefon}`}
           >
-            <Icon name="telefon" size={18} />
+            <Icon name="telefon" size={17} />
           </a>
-
-          <Link href="/milano/termin" className="m-btn m-btn-primary m-header-cta">
-            Termin buchen
-          </Link>
 
           <button
             type="button"
@@ -56,7 +49,7 @@ export function Header() {
             aria-label={offen ? "Menü schließen" : "Menü öffnen"}
             onClick={() => setOffen((v) => !v)}
           >
-            <Icon name={offen ? "schliessen" : "menu"} size={18} />
+            <Icon name={offen ? "schliessen" : "menu"} size={17} />
           </button>
         </div>
       </div>
@@ -72,11 +65,6 @@ export function Header() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link href="/milano/termin" onClick={() => setOffen(false)}>
-                  Termin buchen
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

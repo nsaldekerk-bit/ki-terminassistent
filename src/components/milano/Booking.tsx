@@ -207,7 +207,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
           </div>
           <button
             type="button"
-            className="m-btn m-btn-dunkel m-btn-block"
+            className="m-knopf m-knopf-dunkel m-knopf-block"
             disabled={!dienst}
             onClick={() => setSchritt(2)}
           >
@@ -253,7 +253,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
           </div>
           <button
             type="button"
-            className="m-btn m-btn-dunkel m-btn-block"
+            className="m-knopf m-knopf-dunkel m-knopf-block"
             onClick={() => setSchritt(3)}
           >
             Weiter
@@ -266,7 +266,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
       {schritt === 3 ? (
         <>
           {tage.length === 0 ? (
-            <p className="m-hinweis">Freie Zeiten werden geladen …</p>
+            <p className="m-mini">Freie Zeiten werden geladen …</p>
           ) : (
             <>
               <div className="m-book-tage">
@@ -307,24 +307,24 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
                         </button>
                       ))}
                     </div>
-                    <p className="m-hinweis">
+                    <p className="m-mini">
                       15-Minuten-Raster — so passt auch ein Barttermin dazwischen.
                     </p>
                   </>
                 ) : (
-                  <p className="m-hinweis">
+                  <p className="m-mini">
                     An diesem Tag ist nichts mehr frei. Probier einen anderen Tag.
                   </p>
                 )
               ) : (
-                <p className="m-hinweis">Wähle zuerst einen Tag.</p>
+                <p className="m-mini">Wähle zuerst einen Tag.</p>
               )}
             </>
           )}
 
           <button
             type="button"
-            className="m-btn m-btn-dunkel m-btn-block"
+            className="m-knopf m-knopf-dunkel m-knopf-block"
             disabled={!uhrzeit}
             onClick={() => setSchritt(4)}
           >
@@ -374,13 +374,13 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
 
           <button
             type="button"
-            className="m-btn m-btn-dunkel m-btn-block"
+            className="m-knopf m-knopf-dunkel m-knopf-block"
             disabled={!kontaktOk}
             onClick={() => setSchritt(5)}
           >
             Termin buchen
           </button>
-          <p className="m-hinweis" style={{ textAlign: "center" }}>
+          <p className="m-mini" style={{ textAlign: "center" }}>
             Kostenlos · jederzeit selbst absagbar
           </p>
         </>
@@ -392,7 +392,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
           <span className="m-book-haken" aria-hidden="true">
             <Icon name="haken" size={32} />
           </span>
-          <h3 className="m-display" style={{ fontSize: "1.8rem", margin: 0 }}>
+          <h3 className="m-titel m-titel-m" style={{ margin: 0 }}>
             Termin steht.
           </h3>
 
@@ -435,7 +435,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
             </span>
           </p>
 
-          <button type="button" className="m-btn m-btn-ghost m-btn-block" onClick={neuStarten}>
+          <button type="button" className="m-knopf m-knopf-linie m-knopf-block" onClick={neuStarten}>
             Nochmal ansehen
           </button>
         </div>

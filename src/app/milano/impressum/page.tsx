@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { salon } from "@/lib/milano/content";
-import { Zierlinie } from "@/components/milano/Brand";
 
 export const metadata: Metadata = {
   title: `Impressum — ${salon.name}`,
@@ -10,10 +9,9 @@ export const metadata: Metadata = {
 export default function ImpressumSeite() {
   return (
     <section className="m-container m-section">
-      <div className="m-section-head">
+      <div className="m-section-kopf">
         <p className="m-eyebrow">Rechtliches</p>
-        <h1 className="m-h2">Impressum</h1>
-        <Zierlinie />
+        <h1 className="m-titel m-titel-xl">Impressum</h1>
       </div>
 
       <div className="m-text">

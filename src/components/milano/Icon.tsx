@@ -24,7 +24,9 @@ export type IconName =
   | "schliessen"
   | "person"
   | "bild"
-  | "globus";
+  | "globus"
+  | "uhr"
+  | "mail";
 
 const PFADE: Record<IconName, React.ReactNode> = {
   schere: (
@@ -101,6 +103,18 @@ const PFADE: Record<IconName, React.ReactNode> = {
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <circle cx="9" cy="10" r="2" />
       <path d="m3 17 5-4 4 3 3-2 6 5" />
+    </>
+  ),
+  uhr: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5.4l3.4 2" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3.5 7 8.5 6 8.5-6" />
     </>
   ),
   globus: (

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Booking } from "@/components/milano/Booking";
 import { OpenStatus } from "@/components/milano/OpenStatus";
 import { leistungen, salon } from "@/lib/milano/content";
-import { Zierlinie } from "@/components/milano/Brand";
 
 export const metadata: Metadata = {
   title: `Termin buchen — ${salon.name} Geldern`,
@@ -25,11 +24,10 @@ export default async function TerminSeite({
 
   return (
     <section className="m-container m-section">
-      <div className="m-section-head">
+      <div className="m-section-kopf">
         <p className="m-eyebrow">Termin</p>
-        <h1 className="m-h2">Such dir einen Platz aus.</h1>
-        <Zierlinie />
-        <p className="m-lead" style={{ marginTop: 6 }}>
+        <h1 className="m-titel m-titel-xl">Such dir einen Platz aus.</h1>
+        <p className="m-fliess" style={{ marginTop: 6 }}>
           Vier Schritte, keine Anmeldung. Wer lieber anruft, erreicht den Laden unter{" "}
           <a href={`tel:${salon.telefonLink}`} className="m-num" style={{ color: "var(--messing)" }}>
             {salon.telefon}
