@@ -76,7 +76,17 @@ interface Daten {
   postausgang: Nachricht[];
 }
 
-const LEER: Daten = { termine: [], postausgang: [] };
+/*
+ * Jedes Mal ein frischer Satz Listen — bewusst eine Funktion und keine
+ * Konstante. Eine geteilte Konstante mit `{ ...LEER }` zu kopieren wäre
+ * flach: Beide Listen blieben dieselben Objekte, und das erste `push` nach
+ * einer fehlenden Datei würde sie dauerhaft füllen. Danach hätte jeder
+ * weitere Lesefehler Geistertermine geliefert und `zuruecksetzen()` sie
+ * wieder zurückgeschrieben.
+ */
+function leer(): Daten {
+  return { termine: [], postausgang: [] };
+}
 
 /** Sortierbarer Ortszeit-Stempel "JJJJ-MM-TT HH:MM". */
 export function stempel(now: Date = new Date()): string {
@@ -107,7 +117,7 @@ async function lesen(): Promise<Daten> {
   } catch {
     // Noch nie gebucht, oder die Datei ist kaputt — dann fängt die Demo
     // eben leer an. Ein Absturz wäre hier die schlechtere Antwort.
-    return { ...LEER };
+    return leer();
   }
 }
 
@@ -345,7 +355,7 @@ export function anfrageAnlegen(anfrage: Anfrage): Promise<Nachricht> {
 /** Alles löschen — für den sauberen Stand vor einem Kundentermin. */
 export function zuruecksetzen(): Promise<void> {
   return nacheinander(async () => {
-    await schreiben({ ...LEER });
+    await schreiben(leer());
   });
 }
 

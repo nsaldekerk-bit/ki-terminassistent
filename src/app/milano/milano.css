@@ -1160,8 +1160,11 @@
 
 /* Achtung: `.milano a { color: inherit }` ist spezifischer als eine einzelne
    Klasse — ohne `.milano` davor bliebe die Schrift dunkel auf dunklem Grund. */
+/* Eigene Zeile, nicht im Textfluss: Als inline-flex setzte sich der Knopf
+   direkt hinter den letzten Satz und legte sich über die Telefonnummer. */
 .milano .m-blase-knopf {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 6px;
   margin-top: 11px;
