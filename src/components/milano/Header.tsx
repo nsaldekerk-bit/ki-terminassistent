@@ -9,9 +9,9 @@ import { salon } from "@/lib/milano/content";
 const NAV = [
   { href: "/milano/leistungen", label: "Leistungen & Preise" },
   { href: "/milano#studio", label: "Milano Studio" },
-  { href: "/milano#galerie", label: "Galerie" },
+  { href: "/milano/galerie", label: "Galerie" },
   { href: "/milano/termin", label: "Termin buchen" },
-  { href: "/milano#kontakt", label: "Kontakt" },
+  { href: "/milano/kontakt", label: "Kontakt" },
 ];
 
 export function Header() {

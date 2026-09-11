@@ -4,109 +4,122 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import {
   leistungen,
-  oeffnungszeiten,
   preis,
   team,
   wochentage,
   TEAM_BESTAETIGT,
-  type Leistung,
   type Wochentag,
 } from "@/lib/milano/content";
 
 /*
- * Buchungsstrecke der Demoseite.
+ * Buchungsstrecke der Demoseite — vollständig funktionsfähig.
  *
- * Sie ist vollständig bedienbar, spricht aber noch keine Datenbank an: Die
- * freien Zeiten werden aus den Öffnungszeiten erzeugt, und der letzte
- * Schritt speichert nichts und verschickt keine Mail. Das Anschließen an
- * den Terminassistenten (echte Slots, Buchung, Bestätigungsmail,
- * Erinnerung, Selbst-Absage) ist der nächste Ausbauschritt.
+ * Die freien Zeiten kommen aus /api/milano/zeiten und sind echt gerechnet:
+ * Öffnungszeiten minus das, was auf den Stühlen schon vergeben ist. Der
+ * letzte Schritt legt den Termin wirklich an, schreibt Bestätigung,
+ * Salon-Benachrichtigung und Erinnerung in den Postausgang und gibt eine
+ * Buchungsnummer samt Absage-Link zurück.
+ *
+ * Gespeichert wird lokal in `.milano-demo/daten.json` — kein Server, keine
+ * Datenbank, nichts verlässt den Rechner.
  */
 
-const TAGE_VORAUS = 14;
-const RASTER_MINUTEN = 15;
-const WOCHENTAG_KEYS: Wochentag[] = ["so", "mo", "di", "mi", "do", "fr", "sa"];
+interface FreieZeit {
+  zeit: string;
+  mitarbeiterId: string;
+}
 
 interface Tag {
-  datum: Date;
-  key: Wochentag;
+  datum: string;
+  wochentag: Wochentag;
   geschlossen: boolean;
+  zeiten: FreieZeit[];
 }
 
-function minuten(hhmm: string): number {
-  const [h, m] = hhmm.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function alsUhrzeit(min: number): string {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-/** Stabiler Streuwert — damit Server und Client dieselben Slots zeigen. */
-function streu(text: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967295;
-}
-
-/**
- * Freie Zeiten eines Tages. Im Ausbau kommt das aus
- * lib/availability/slots.ts; hier wird es aus den Öffnungszeiten erzeugt
- * und ein Teil als belegt ausgeblendet, damit die Auswahl realistisch
- * aussieht statt lückenlos.
- */
-function freieZeiten(tag: Tag, dienst: Leistung, mitarbeiter: string): string[] {
-  const zeit = oeffnungszeiten[tag.key];
-  if (!zeit) return [];
-
-  const datum = tag.datum.toISOString().slice(0, 10);
-  const zeiten: string[] = [];
-
-  for (
-    let m = minuten(zeit.von);
-    m + dienst.minuten <= minuten(zeit.bis);
-    m += RASTER_MINUTEN
-  ) {
-    if (streu(`${datum}|${dienst.id}|${mitarbeiter}|${m}`) > 0.72) {
-      zeiten.push(alsUhrzeit(m));
-    }
-  }
-
-  return zeiten.slice(0, 12);
+interface Termin {
+  code: string;
+  leistungId: string;
+  mitarbeiterId: string;
+  datum: string;
+  von: string;
+  minuten: number;
+  name: string;
 }
 
 type Schritt = 1 | 2 | 3 | 4 | 5;
+
+/** "2026-09-12" → "Fr., 12. September" */
+function datumText(datum: string): string {
+  return new Intl.DateTimeFormat("de-DE", {
+    timeZone: "UTC",
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${datum}T12:00:00Z`));
+}
+
+/** Tagesziffer für den Streifen. */
+function tagesZiffer(datum: string): string {
+  return String(Number(datum.slice(8, 10)));
+}
 
 export function Booking({ vorauswahl }: { vorauswahl?: string }) {
   const [schritt, setSchritt] = useState<Schritt>(1);
   const [dienstId, setDienstId] = useState<string | null>(vorauswahl ?? null);
   const [mitarbeiterId, setMitarbeiterId] = useState<string>("egal");
-  const [tagIndex, setTagIndex] = useState<number | null>(null);
+  const [datum, setDatum] = useState<string | null>(null);
   const [uhrzeit, setUhrzeit] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [telefon, setTelefon] = useState("");
   const [email, setEmail] = useState("");
-  const [tage, setTage] = useState<Tag[]>([]);
+  const [notiz, setNotiz] = useState("");
+
+  const [woche, setWoche] = useState(0);
+  const [sendet, setSendet] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
+  const [termin, setTermin] = useState<Termin | null>(null);
+
   const karte = useRef<HTMLDivElement>(null);
 
-  // Die Tage erst im Browser bilden: Auf dem Server wäre „heute" eine
-  // andere Sekunde und React meldete eine Hydration-Abweichung.
+  const dienst = useMemo(
+    () => leistungen.find((l) => l.id === dienstId) ?? null,
+    [dienstId],
+  );
+
+  /*
+   * Die geladenen Tage tragen den Schlüssel, zu dem sie gehören. Passt er
+   * nicht mehr zur Auswahl, gilt die Liste als „wird geladen“. So muss der
+   * Effekt keinen Ladezustand setzen und löst keine zweite Renderrunde aus.
+   * `stand` hochzählen heißt: dieselbe Auswahl noch einmal frisch holen.
+   */
+  const schluessel = dienstId ? `${dienstId}|${mitarbeiterId}` : null;
+  const [geladen, setGeladen] = useState<{ schluessel: string; tage: Tag[] } | null>(null);
+  const [stand, setStand] = useState(0);
+  const tage = geladen && geladen.schluessel === schluessel ? geladen.tage : null;
+
   useEffect(() => {
-    const heute = new Date();
-    const liste: Tag[] = [];
-    for (let i = 0; i < TAGE_VORAUS; i++) {
-      const datum = new Date(heute);
-      datum.setDate(heute.getDate() + i);
-      const key = WOCHENTAG_KEYS[datum.getDay()];
-      liste.push({ datum, key, geschlossen: oeffnungszeiten[key] === null });
-    }
-    setTage(liste);
-  }, []);
+    if (!dienstId || !schluessel) return;
+    let abgebrochen = false;
+
+    void (async () => {
+      try {
+        const antwort = await fetch(
+          `/api/milano/zeiten?leistung=${encodeURIComponent(dienstId)}&mitarbeiter=${encodeURIComponent(mitarbeiterId)}`,
+          { cache: "no-store" },
+        );
+        const daten = await antwort.json();
+        if (!abgebrochen) setGeladen({ schluessel, tage: antwort.ok ? daten.tage : [] });
+      } catch {
+        if (!abgebrochen) setGeladen({ schluessel, tage: [] });
+      }
+    })();
+
+    // Wer schnell zwischen Leistungen springt, darf keine veraltete Antwort
+    // über die neue gelegt bekommen.
+    return () => {
+      abgebrochen = true;
+    };
+  }, [dienstId, mitarbeiterId, schluessel, stand]);
 
   // Nach einem Schritt kann der Kopf der Karte aus dem Bild gerutscht sein —
   // vor allem auf dem Handy. Dann nachziehen, damit der neue Schritt (und am
@@ -120,35 +133,18 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
     }
   }, [schritt]);
 
-  const dienst = useMemo(
-    () => leistungen.find((l) => l.id === dienstId) ?? null,
-    [dienstId],
-  );
-
-  const tag = tagIndex !== null ? (tage[tagIndex] ?? null) : null;
-
-  const zeiten = useMemo(() => {
-    if (!tag || !dienst) return [];
-    return freieZeiten(tag, dienst, mitarbeiterId);
-  }, [tag, dienst, mitarbeiterId]);
-
-  const mitarbeiterName =
-    mitarbeiterId === "egal"
-      ? "wer gerade frei ist"
-      : (team.find((m) => m.id === mitarbeiterId)?.name ?? "");
-
-  const datumText = tag
-    ? tag.datum.toLocaleDateString("de-DE", {
-        weekday: "short",
-        day: "numeric",
-        month: "long",
-      })
-    : "";
+  const tag = tage?.find((t) => t.datum === datum) ?? null;
+  const zeiten = tag?.zeiten ?? [];
 
   const fortschritt = [0, 20, 45, 70, 90, 100][schritt];
   const kontaktOk = name.trim().length > 1 && telefon.trim().length > 5;
 
+  /** Die sieben Tage, die der Streifen gerade zeigt. */
+  const streifen = (tage ?? []).slice(woche * 7, woche * 7 + 7);
+  const letzteWoche = Math.max(0, Math.ceil((tage?.length ?? 0) / 7) - 1);
+
   function zurueck() {
+    setFehler(null);
     setSchritt((s) => (s > 1 ? ((s - 1) as Schritt) : s));
   }
 
@@ -156,12 +152,62 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
     setSchritt(1);
     setDienstId(vorauswahl ?? null);
     setMitarbeiterId("egal");
-    setTagIndex(null);
+    setDatum(null);
     setUhrzeit(null);
     setName("");
     setTelefon("");
     setEmail("");
+    setNotiz("");
+    setTermin(null);
+    setFehler(null);
+    setWoche(0);
   }
+
+  async function buchen() {
+    if (!dienstId || !datum || !uhrzeit) return;
+    setSendet(true);
+    setFehler(null);
+    try {
+      const antwort = await fetch("/api/milano/termine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leistung: dienstId,
+          mitarbeiter: mitarbeiterId,
+          datum,
+          von: uhrzeit,
+          name: name.trim(),
+          telefon: telefon.trim(),
+          email: email.trim(),
+          notiz: notiz.trim(),
+        }),
+      });
+      const daten = await antwort.json();
+
+      if (!antwort.ok) {
+        setFehler(daten.fehler ?? "Das hat gerade nicht geklappt.");
+        // Der Platz kann in der Zwischenzeit weg sein — dann zurück zur
+        // Auswahl mit frisch geholten Zeiten.
+        if (antwort.status === 409) {
+          setUhrzeit(null);
+          setSchritt(3);
+          setStand((v) => v + 1);
+        }
+        return;
+      }
+
+      setTermin(daten.termin);
+      setSchritt(5);
+    } catch {
+      setFehler("Keine Verbindung zum Server. Läuft `npm run dev` noch?");
+    } finally {
+      setSendet(false);
+    }
+  }
+
+  const gebuchterMitarbeiter = termin
+    ? (team.find((m) => m.id === termin.mitarbeiterId)?.name ?? termin.mitarbeiterId)
+    : "";
 
   return (
     <div className="m-book" ref={karte}>
@@ -183,6 +229,12 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
         </div>
       ) : null}
 
+      {fehler && schritt < 5 ? (
+        <p className="m-book-fehler" role="alert">
+          {fehler}
+        </p>
+      ) : null}
+
       {/* 1 — Leistung */}
       {schritt === 1 ? (
         <>
@@ -196,6 +248,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
                 onClick={() => {
                   setDienstId(l.id);
                   setUhrzeit(null);
+                  setDatum(null);
                 }}
               >
                 <span className="m-book-option-name">{l.name}</span>
@@ -265,27 +318,56 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
       {/* 3 — Tag & Uhrzeit */}
       {schritt === 3 ? (
         <>
-          {tage.length === 0 ? (
+          {tage === null ? (
             <p className="m-mini">Freie Zeiten werden geladen …</p>
           ) : (
             <>
+              <div className="m-book-wochen">
+                <button
+                  type="button"
+                  onClick={() => setWoche((w) => Math.max(0, w - 1))}
+                  disabled={woche === 0}
+                  aria-label="Woche zurück"
+                >
+                  <Icon name="pfeil-links" size={15} />
+                </button>
+                <span className="m-book-schritt">
+                  {woche === 0 ? "Diese Woche" : woche === 1 ? "Nächste Woche" : "In zwei Wochen"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setWoche((w) => Math.min(letzteWoche, w + 1))}
+                  disabled={woche >= letzteWoche}
+                  aria-label="Woche vor"
+                >
+                  <Icon name="pfeil-rechts" size={15} />
+                </button>
+              </div>
+
               <div className="m-book-tage">
-                {tage.slice(0, 7).map((t, i) => (
+                {streifen.map((t) => (
                   <button
-                    key={t.datum.toISOString()}
+                    key={t.datum}
                     type="button"
                     className="m-book-tag"
-                    disabled={t.geschlossen}
-                    aria-pressed={tagIndex === i}
+                    disabled={t.geschlossen || t.zeiten.length === 0}
+                    aria-pressed={datum === t.datum}
+                    title={
+                      t.geschlossen
+                        ? "Ruhetag"
+                        : t.zeiten.length === 0
+                          ? "Ausgebucht"
+                          : `${t.zeiten.length} freie Zeiten`
+                    }
                     onClick={() => {
-                      setTagIndex(i);
+                      setDatum(t.datum);
                       setUhrzeit(null);
                     }}
                   >
                     <span className="m-book-tag-wt">
-                      {wochentage.find((w) => w.key === t.key)?.kurz}
+                      {wochentage.find((w) => w.key === t.wochentag)?.kurz}
                     </span>
-                    <span className="m-book-tag-nr">{t.datum.getDate()}</span>
+                    <span className="m-book-tag-nr">{tagesZiffer(t.datum)}</span>
                   </button>
                 ))}
               </div>
@@ -293,22 +375,24 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
               {tag ? (
                 zeiten.length > 0 ? (
                   <>
-                    <span className="m-book-schritt">Freie Zeiten · {datumText}</span>
+                    <span className="m-book-schritt">
+                      Freie Zeiten · {datumText(tag.datum)}
+                    </span>
                     <div className="m-book-slots">
                       {zeiten.map((z) => (
                         <button
-                          key={z}
+                          key={z.zeit}
                           type="button"
                           className="m-slot"
-                          aria-pressed={uhrzeit === z}
-                          onClick={() => setUhrzeit(z)}
+                          aria-pressed={uhrzeit === z.zeit}
+                          onClick={() => setUhrzeit(z.zeit)}
                         >
-                          {z}
+                          {z.zeit}
                         </button>
                       ))}
                     </div>
                     <p className="m-mini">
-                      15-Minuten-Raster — so passt auch ein Barttermin dazwischen.
+                      Echte Belegung: Was hier fehlt, ist schon vergeben.
                     </p>
                   </>
                 ) : (
@@ -370,15 +454,24 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
                 placeholder="name@beispiel.de"
               />
             </div>
+            <div className="m-feld">
+              <label htmlFor="m-notiz">Anmerkung (optional)</label>
+              <input
+                id="m-notiz"
+                value={notiz}
+                onChange={(e) => setNotiz(e.target.value)}
+                placeholder="z. B. Seiten kurz, oben länger"
+              />
+            </div>
           </div>
 
           <button
             type="button"
             className="m-knopf m-knopf-dunkel m-knopf-block"
-            disabled={!kontaktOk}
-            onClick={() => setSchritt(5)}
+            disabled={!kontaktOk || sendet}
+            onClick={buchen}
           >
-            Termin buchen
+            {sendet ? "Einen Moment …" : "Termin verbindlich buchen"}
           </button>
           <p className="m-mini" style={{ textAlign: "center" }}>
             Kostenlos · jederzeit selbst absagbar
@@ -387,7 +480,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
       ) : null}
 
       {/* 5 — Fertig */}
-      {schritt === 5 ? (
+      {schritt === 5 && termin ? (
         <div className="m-book-fertig">
           <span className="m-book-haken" aria-hidden="true">
             <Icon name="haken" size={32} />
@@ -399,44 +492,53 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
           <dl className="m-book-zusammenfassung">
             <div>
               <dt>Leistung</dt>
-              <dd>{dienst?.name}</dd>
+              <dd>{leistungen.find((l) => l.id === termin.leistungId)?.name}</dd>
             </div>
             <div>
               <dt>Wann</dt>
               <dd className="m-num">
-                {datumText} · {uhrzeit}
+                {datumText(termin.datum)} · {termin.von}
               </dd>
             </div>
             <div>
               <dt>Bei</dt>
-              <dd>{mitarbeiterId === "egal" ? mitarbeiterName : `[${mitarbeiterName}]`}</dd>
+              <dd>{TEAM_BESTAETIGT ? gebuchterMitarbeiter : `[${gebuchterMitarbeiter}]`}</dd>
             </div>
             <div>
               <dt>Auf den Namen</dt>
-              <dd>{name}</dd>
+              <dd>{termin.name}</dd>
             </div>
             <div>
-              <dt>Dauer</dt>
-              <dd className="m-num">
-                {dienst?.minuten} Min. · {dienst ? preis(dienst.preisCent) : ""}
-              </dd>
+              <dt>Buchungsnummer</dt>
+              <dd className="m-num">{termin.code}</dd>
             </div>
           </dl>
+
+          <a
+            href={`/milano/termin/${termin.code}`}
+            className="m-knopf m-knopf-dunkel m-knopf-block"
+          >
+            Termin ansehen oder absagen
+          </a>
 
           <p className="m-demo-notiz">
             <span style={{ flex: "none", color: "var(--text-grau)", marginTop: 1 }}>
               <Icon name="kalender" size={16} />
             </span>
             <span>
-              <strong>Vorführ-Ansicht.</strong> Der Termin wurde noch nicht gespeichert und es
-              ging keine Mail raus. Genau hier wird der Terminassistent angeschlossen:
-              echte freie Zeiten, Bestätigung per Mail, Erinnerung am Vortag und
-              Selbst-Absage über einen Link.
+              <strong>Vorführ-Ansicht.</strong> Der Termin ist wirklich gespeichert — der
+              Platz ist jetzt belegt und taucht nicht mehr in den freien Zeiten auf. Was
+              daraufhin rausginge — Bestätigung an dich, Benachrichtigung an den Laden,
+              Erinnerung am Vortag —, liegt im Postausgang unter{" "}
+              <a href="/milano/salon" style={{ borderBottom: "1px solid currentColor" }}>
+                /milano/salon
+              </a>
+              . Verschickt wird in der Vorführung nichts.
             </span>
           </p>
 
           <button type="button" className="m-knopf m-knopf-linie m-knopf-block" onClick={neuStarten}>
-            Nochmal ansehen
+            Noch einen Termin buchen
           </button>
         </div>
       ) : null}

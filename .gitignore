@@ -54,3 +54,6 @@ next-env.d.ts
 *.mov
 *.avi
 *.mkv
+
+# lokale Daten der Milano-Demo (gebuchte Termine, Postausgang)
+/.milano-demo/

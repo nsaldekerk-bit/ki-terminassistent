@@ -18,9 +18,16 @@ export function OpenStatus() {
   const [jetzt, setJetzt] = useState<Status | null>(null);
 
   useEffect(() => {
-    setJetzt(status());
-    const timer = setInterval(() => setJetzt(status()), 60_000);
-    return () => clearInterval(timer);
+    const nachziehen = () => setJetzt(status());
+    // Einmal direkt nach dem Einhängen und danach jede Minute. Das erste
+    // Nachziehen läuft bewusst nicht im Effektkörper selbst, sondern gleich
+    // danach — sonst löst es eine zweite Renderrunde im selben Durchgang aus.
+    const sofort = setTimeout(nachziehen, 0);
+    const takt = setInterval(nachziehen, 60_000);
+    return () => {
+      clearTimeout(sofort);
+      clearInterval(takt);
+    };
   }, []);
 
   if (!jetzt) {

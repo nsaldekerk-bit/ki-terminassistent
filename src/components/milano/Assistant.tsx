@@ -1,22 +1,107 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 
-const FRAGEN = ["Termin buchen", "Habt ihr Samstag offen?", "Was kostet ein Fade?"];
-
 /**
- * Der Chat-Assistent als Vorschau. Im fertigen Ausbau sitzt hier das
- * bestehende Widget aus /embed/<mandant> im iframe — für die Demo genügt
- * die Oberfläche, damit im Gespräch sichtbar ist, wo der Assistent lebt.
+ * Der Chat-Assistent — er antwortet wirklich.
+ *
+ * Die Antworten kommen aus /api/milano/assistent und damit aus den eigenen
+ * Daten des Salons: Öffnungszeiten, Preise, Leistungen, Anfahrt. Was der
+ * Inhaber uns noch nicht gesagt hat, erfindet er nicht, sondern verweist
+ * ans Telefon.
+ *
+ * Im Ausbau tritt an diese Stelle das Widget aus /embed/<mandant>, das
+ * dieselben Daten an das Sprachmodell gibt und frei formuliert antwortet.
+ * Die Oberfläche hier bleibt dabei, wie sie ist.
  */
+
+interface Antwort {
+  text: string;
+  vorschlaege: string[];
+  link?: { text: string; href: string };
+}
+
+interface Zeile {
+  id: number;
+  von: "gast" | "milano";
+  text: string;
+  link?: { text: string; href: string };
+}
+
+const START: Zeile = {
+  id: 0,
+  von: "milano",
+  text: "Hallo! Frag mich nach Preisen, Öffnungszeiten oder freien Terminen — oder buch direkt.",
+};
+
+const START_VORSCHLAEGE = ["Termin buchen", "Wann habt ihr offen?", "Was kostet ein Fade?"];
+
 export function Assistant() {
   const [offen, setOffen] = useState(false);
+  const [zeilen, setZeilen] = useState<Zeile[]>([START]);
+  const [vorschlaege, setVorschlaege] = useState<string[]>(START_VORSCHLAEGE);
+  const [eingabe, setEingabe] = useState("");
+  const [tippt, setTippt] = useState(false);
+
+  const verlauf = useRef<HTMLDivElement>(null);
+  const feld = useRef<HTMLInputElement>(null);
+  const zaehler = useRef(1);
+
+  // Immer ans Ende scrollen, sonst steht die neue Antwort unter dem Rand.
+  useEffect(() => {
+    const el = verlauf.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [zeilen, tippt]);
+
+  useEffect(() => {
+    if (offen) feld.current?.focus();
+  }, [offen]);
+
+  async function fragen(frage: string) {
+    const text = frage.trim();
+    if (!text || tippt) return;
+
+    setZeilen((z) => [...z, { id: zaehler.current++, von: "gast", text }]);
+    setEingabe("");
+    setVorschlaege([]);
+    setTippt(true);
+
+    try {
+      const antwort = await fetch("/api/milano/assistent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ frage: text }),
+      });
+      const daten: Antwort = await antwort.json();
+
+      // Kurz warten, damit die Antwort nicht im selben Lidschlag steht —
+      // ohne die Pause wirkt sie wie ein vorgefertigter Text.
+      await new Promise((fertig) => setTimeout(fertig, 320));
+
+      setZeilen((z) => [
+        ...z,
+        { id: zaehler.current++, von: "milano", text: daten.text, link: daten.link },
+      ]);
+      setVorschlaege(daten.vorschlaege ?? []);
+    } catch {
+      setZeilen((z) => [
+        ...z,
+        {
+          id: zaehler.current++,
+          von: "milano",
+          text: "Da komme ich gerade nicht durch. Läuft der Server noch?",
+        },
+      ]);
+    } finally {
+      setTippt(false);
+    }
+  }
 
   return (
     <div className="m-assistent">
       {offen ? (
-        <div className="m-assistent-panel">
+        <div className="m-assistent-panel" role="dialog" aria-label="Milano Assistent">
           <div className="m-assistent-kopf">
             <span className="m-assistent-avatar" aria-hidden="true">
               M
@@ -61,28 +146,72 @@ export function Assistant() {
             </button>
           </div>
 
-          <p className="m-blase">Hallo! Termin buchen oder erst eine Frage?</p>
-
-          <div className="m-assistent-chips">
-            {FRAGEN.map((frage) => (
-              <span key={frage}>{frage}</span>
+          <div className="m-assistent-verlauf" ref={verlauf}>
+            {zeilen.map((z) => (
+              <div key={z.id} className={z.von === "gast" ? "m-blase-gast" : "m-blase"}>
+                {z.text}
+                {z.link ? (
+                  <a
+                    className="m-blase-knopf"
+                    href={z.link.href}
+                    target={z.link.href.startsWith("http") ? "_blank" : undefined}
+                    rel={z.link.href.startsWith("http") ? "noreferrer" : undefined}
+                  >
+                    {z.link.text}
+                    <Icon name="pfeil-rechts" size={14} />
+                  </a>
+                ) : null}
+              </div>
             ))}
+
+            {tippt ? (
+              <div className="m-blase m-blase-tippt" aria-label="schreibt gerade">
+                <i />
+                <i />
+                <i />
+              </div>
+            ) : null}
           </div>
 
-          <p className="m-mini" style={{ marginTop: 2 }}>
-            Vorschau — der Assistent wird im nächsten Schritt angeschlossen.
-          </p>
+          {vorschlaege.length > 0 ? (
+            <div className="m-assistent-chips">
+              {vorschlaege.map((frage) => (
+                <button key={frage} type="button" onClick={() => fragen(frage)}>
+                  {frage}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <form
+            className="m-assistent-eingabe"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void fragen(eingabe);
+            }}
+          >
+            <input
+              ref={feld}
+              value={eingabe}
+              onChange={(e) => setEingabe(e.target.value)}
+              placeholder="Frag etwas …"
+              aria-label="Frage an den Assistenten"
+              maxLength={500}
+            />
+            <button type="submit" disabled={!eingabe.trim() || tippt} aria-label="Senden">
+              <Icon name="pfeil-rechts" size={17} />
+            </button>
+          </form>
         </div>
       ) : null}
 
       <button
         type="button"
         className="m-assistent-knopf"
-        aria-expanded={offen}
+        onClick={() => setOffen((o) => !o)}
         aria-label={offen ? "Assistent schließen" : "Assistent öffnen"}
-        onClick={() => setOffen((v) => !v)}
       >
-        <Icon name={offen ? "schliessen" : "kalender"} size={24} />
+        <Icon name={offen ? "schliessen" : "mail"} size={20} />
       </button>
     </div>
   );

@@ -128,9 +128,13 @@
   white-space: nowrap;
 }
 
-.m-section { padding: 64px 0; }
+/* Nur senkrecht polstern. Mit der Kurzschreibweise `padding: 64px 0` würde
+   diese Regel den Seitenabstand von .m-container überschreiben — beide
+   Klassen sitzen auf denselben Elementen, und .m-section steht später in
+   der Datei. Der Text klebte dadurch am Rand. */
+.m-section { padding-block: 64px; }
 
-@media (min-width: 900px) { .m-section { padding: 92px 0; } }
+@media (min-width: 900px) { .m-section { padding-block: 92px; } }
 
 .m-section-kopf {
   display: flex;
@@ -1024,7 +1028,7 @@
 
 .m-assistent-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.m-assistent-chips span {
+.m-assistent-chips button {
   padding: 8px 13px;
   border: 1px solid var(--grau-linie);
   border-radius: 999px;
@@ -1124,3 +1128,352 @@
 
 /* Neutraler Status, solange die Uhrzeit im Browser noch nicht berechnet ist */
 .m-status-neutral { color: var(--text-grau); }
+
+/* ---------- Chat: Verlauf, Eingabe, Antwortknopf ---------- */
+
+.m-assistent-verlauf {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: min(44vh, 330px);
+  overflow-y: auto;
+  /* Platz für den Schatten der Blasen, sonst scheuert er am Rand. */
+  padding-right: 4px;
+}
+
+/* Die Antworten kommen mit Zeilenumbrüchen (Öffnungszeiten, Preislisten) —
+   die sollen auch als solche stehen bleiben. */
+.m-blase,
+.m-blase-gast { white-space: pre-line; }
+
+.m-blase-gast {
+  align-self: flex-end;
+  max-width: 92%;
+  padding: 11px 14px;
+  background: var(--text);
+  color: var(--weiss);
+  border-radius: 12px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Achtung: `.milano a { color: inherit }` ist spezifischer als eine einzelne
+   Klasse — ohne `.milano` davor bliebe die Schrift dunkel auf dunklem Grund. */
+.milano .m-blase-knopf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 11px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--weiss);
+  font-family: var(--milano-display), sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.m-blase-tippt { display: flex; gap: 5px; align-items: center; padding: 14px; }
+
+.m-blase-tippt i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--text-grau);
+  animation: m-tippt 1.1s infinite ease-in-out;
+}
+
+.m-blase-tippt i:nth-child(2) { animation-delay: 0.15s; }
+.m-blase-tippt i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes m-tippt {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-blase-tippt i { animation: none; opacity: 0.5; }
+}
+
+.m-assistent-chips button {
+  background: transparent;
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+
+.m-assistent-chips button:hover { border-color: var(--text); color: var(--text); }
+
+.m-assistent-eingabe { display: flex; gap: 8px; align-items: center; }
+
+.m-assistent-eingabe input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--grau-linie);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--weiss);
+}
+
+.m-assistent-eingabe input:focus-visible { outline: none; border-color: var(--text); }
+
+.m-assistent-eingabe button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: none;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--weiss);
+  cursor: pointer;
+}
+
+.m-assistent-eingabe button:disabled { background: var(--grau-linie); cursor: not-allowed; }
+
+/* ---------- Buchung: Fehlermeldung und Wochenwechsel ---------- */
+
+.m-book-fehler {
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: var(--r-knopf);
+  background: var(--grau-karte);
+  border-left: 2px solid var(--text);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.m-book-wochen { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.m-book-wochen button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--grau-linie);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.18s ease;
+}
+
+.m-book-wochen button:hover:not(:disabled) { border-color: var(--text); }
+.m-book-wochen button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ---------- Innenansicht des Salons ---------- */
+
+.m-salon { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+.m-salon-zahlen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.m-salon-zahlen div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 14px;
+  background: var(--grau-karte);
+  border-radius: var(--r-knopf);
+  text-align: center;
+}
+
+.m-salon-zahlen strong { font-size: 1.5rem; font-weight: 400; font-variant-numeric: tabular-nums; }
+.m-salon-zahlen span { font-size: 0.72rem; color: var(--text-grau); line-height: 1.35; }
+
+.m-salon-knoepfe { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.m-salon-meldung {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--grau-karte);
+  border-radius: var(--r-knopf);
+  font-size: 0.8rem;
+}
+
+.m-salon-h { margin: 18px 0 0; }
+
+.m-salon-tag { display: flex; flex-direction: column; gap: 8px; }
+
+.m-salon-tag h3 {
+  margin: 0;
+  font-family: var(--milano-display), sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-grau);
+  font-weight: 400;
+}
+
+.m-salon-termin {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid var(--grau-linie);
+  border-radius: var(--r-knopf);
+}
+
+.m-salon-zeit { flex: none; font-size: 1rem; font-variant-numeric: tabular-nums; min-width: 48px; }
+
+.m-salon-inhalt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.m-salon-inhalt strong { font-weight: 500; }
+
+.m-salon-aktion { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+.milano .m-salon-aktion a { font-size: 0.74rem; color: var(--text-grau); }
+
+.m-salon-aktion button {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.74rem;
+  color: var(--text-grau);
+  cursor: pointer;
+  border-bottom: 1px solid currentColor;
+  padding: 0;
+}
+
+.m-salon-aktion button:hover { color: var(--text); }
+
+.m-salon-post { display: flex; flex-direction: column; gap: 8px; }
+
+.m-salon-brief { border: 1px solid var(--grau-linie); border-radius: var(--r-knopf); overflow: hidden; }
+
+.m-salon-brief > button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 13px 16px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.m-salon-brief > button:hover { background: var(--grau-karte); }
+
+.m-salon-brief-kopf { display: flex; align-items: center; gap: 9px; font-size: 0.8rem; }
+
+.m-salon-marke {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--grau-linie);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-grau);
+}
+
+.m-salon-marke-raus { background: var(--text); border-color: var(--text); color: var(--weiss); }
+
+.m-salon-betreff { font-size: 0.82rem; color: var(--text-grau); }
+
+.m-salon-text {
+  margin: 0;
+  padding: 16px;
+  background: var(--grau-karte);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* ---------- Galerieseite ---------- */
+
+.m-galerie { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+@media (min-width: 860px) { .m-galerie { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+
+.m-galerie-platte { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+
+.m-galerie-bild {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  background: var(--grau-bild);
+  border-radius: var(--r-bild);
+  color: var(--text-grau);
+}
+
+/* Zwei hohe Flächen brechen das Raster auf, damit die Seite nicht wie eine
+   Tabelle wirkt — genau wie in der Vorlage. */
+.m-galerie-hoch .m-galerie-bild { aspect-ratio: 3 / 4; }
+
+.m-galerie-platte figcaption { display: flex; flex-direction: column; gap: 2px; padding-left: 2px; }
+.m-galerie-platte figcaption strong { font-weight: 500; font-size: 0.9rem; }
+
+.m-galerie-schluss {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 34px;
+}
+
+/* ---------- Kontaktseite ---------- */
+
+.m-kontakt { display: grid; gap: 26px; align-items: start; }
+
+@media (min-width: 900px) { .m-kontakt { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr); gap: 46px; } }
+
+.m-kontakt-spalte { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+
+.m-kontakt-block { display: flex; flex-direction: column; gap: 10px; }
+
+.m-kontakt-block h2 {
+  margin: 0;
+  font-family: var(--milano-display), sans-serif;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-grau);
+}
+
+.milano .m-kontakt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+  width: fit-content;
+  border-bottom: 1px solid var(--grau-linie);
+  padding-bottom: 2px;
+  transition: border-color 0.18s ease;
+}
+
+.milano .m-kontakt-link:hover { border-color: var(--text); }
+
+.milano .m-kontakt-nummer {
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  width: fit-content;
+}
+
+.m-feld textarea {
+  padding: 12px 14px;
+  border: 1px solid var(--grau-linie);
+  border-radius: var(--r-knopf);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--weiss);
+  resize: vertical;
+  min-height: 120px;
+}
+
+.m-feld textarea:focus-visible { outline: none; border-color: var(--text); }

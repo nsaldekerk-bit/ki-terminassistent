@@ -96,8 +96,9 @@ export default function MilanoLayout({ children }: { children: React.ReactNode }
               <span className="m-footer-titel">Services</span>
               <Link href="/milano/leistungen">Leistungen &amp; Preise</Link>
               <Link href="/milano#studio">Milano Studio</Link>
-              <Link href="/milano#galerie">Galerie</Link>
+              <Link href="/milano/galerie">Galerie</Link>
               <Link href="/milano/termin">Termin buchen</Link>
+              <Link href="/milano/kontakt">Kontakt</Link>
             </div>
 
             <div className="m-footer-spalte">
