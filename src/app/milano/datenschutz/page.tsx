@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 export default function DatenschutzSeite() {
   return (
     <section className="m-container m-section">
-      <div className="m-section-kopf">
+      <div className="m-section-kopf m-section-kopf-zentriert">
         <p className="m-eyebrow">Rechtliches</p>
-        <h1 className="m-titel m-titel-xl">Datenschutz</h1>
+        <h1 className="m-titel m-titel-xl">Datenschutz.</h1>
       </div>
 
-      <div className="m-text">
+      <div className="m-text" style={{ margin: "0 auto" }}>
         <p className="m-infobox" style={{ margin: 0 }}>
           <span>
             <strong>Entwurf.</strong> Dieser Text beschreibt, wie die Seite im fertigen Ausbau

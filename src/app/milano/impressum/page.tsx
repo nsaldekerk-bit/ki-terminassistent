@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 export default function ImpressumSeite() {
   return (
     <section className="m-container m-section">
-      <div className="m-section-kopf">
+      <div className="m-section-kopf m-section-kopf-zentriert">
         <p className="m-eyebrow">Rechtliches</p>
-        <h1 className="m-titel m-titel-xl">Impressum</h1>
+        <h1 className="m-titel m-titel-xl">Impressum.</h1>
       </div>
 
-      <div className="m-text">
+      <div className="m-text" style={{ margin: "0 auto" }}>
         <p className="m-infobox" style={{ margin: 0 }}>
           <span>
             <strong>Entwurf.</strong> Die Angaben in eckigen Klammern fehlen uns noch. Ein

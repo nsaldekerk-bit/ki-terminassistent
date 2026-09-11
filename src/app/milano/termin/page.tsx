@@ -24,12 +24,16 @@ export default async function TerminSeite({
 
   return (
     <section className="m-container m-section">
-      <div className="m-section-kopf">
+      <div className="m-section-kopf m-section-kopf-zentriert">
         <p className="m-eyebrow">Termin</p>
         <h1 className="m-titel m-titel-xl">Such dir einen Platz aus.</h1>
-        <p className="m-fliess" style={{ marginTop: 6 }}>
+        <p className="m-fliess" style={{ textAlign: "center" }}>
           Vier Schritte, keine Anmeldung. Wer lieber anruft, erreicht den Laden unter{" "}
-          <a href={`tel:${salon.telefonLink}`} className="m-num" style={{ color: "var(--messing)" }}>
+          <a
+            href={`tel:${salon.telefonLink}`}
+            className="m-num"
+            style={{ color: "var(--text)", borderBottom: "1px solid currentColor" }}
+          >
             {salon.telefon}
           </a>
           .
@@ -39,7 +43,7 @@ export default async function TerminSeite({
         </div>
       </div>
 
-      <div style={{ maxWidth: 560 }}>
+      <div style={{ maxWidth: 620, margin: "0 auto" }}>
         <Booking vorauswahl={vorauswahl} />
       </div>
     </section>

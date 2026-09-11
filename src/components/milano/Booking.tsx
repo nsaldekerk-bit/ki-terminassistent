@@ -424,7 +424,7 @@ export function Booking({ vorauswahl }: { vorauswahl?: string }) {
           </dl>
 
           <p className="m-demo-notiz">
-            <span style={{ flex: "none", color: "var(--messing-tief)", marginTop: 1 }}>
+            <span style={{ flex: "none", color: "var(--text-grau)", marginTop: 1 }}>
               <Icon name="kalender" size={16} />
             </span>
             <span>

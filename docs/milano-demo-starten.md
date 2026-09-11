@@ -94,7 +94,28 @@ Inhaber die echten Angaben geliefert hat: Werte eintragen, Schalter auf
 
 ## Gestaltung
 
-Die Farben, Schriftgrößen und Bausteine stehen gesammelt in
-**`src/app/milano/milano.css`**, ganz oben als Variablen unter `.milano`.
-Wer die Messingfarbe ändern will, ändert `--messing` — und die ganze Seite
-zieht nach.
+Die Seite folgt der Vorlage, die der Kunde vorgegeben hat
+(larimar-studios.com): weißer Grund, fast schwarze Bänder für FAQ und
+Fußzeile, helles Grau für Karten und Bildflächen — **kein Akzentton**.
+Überschriften sind leichte, weit gesperrte Versalien mit Punkt am Ende,
+Knöpfe sind Pillen in Title Case.
+
+Alle Farben und Maße stehen gesammelt in **`src/app/milano/milano.css`**,
+ganz oben als Variablen unter `.milano`:
+
+| Variable | Bedeutung |
+|---|---|
+| `--weiss`, `--dunkel` | Grund hell bzw. die dunklen Bänder |
+| `--grau-karte` | Karten und Bildflächen |
+| `--text`, `--text-grau` | Fließtext und sekundärer Text |
+| `--r-bild`, `--r-knopf` | Eckenradius für Bilder bzw. Knöpfe |
+
+Die Schriften setzt `src/app/milano/layout.tsx`: **Jost** für Überschriften,
+**Geist** für Fließtext, **Parisienne** für die Handschrift unter der
+Wortmarke.
+
+**Bilder:** Überall, wo ein Foto hingehört, steht das Milano-Monogramm aus
+`src/components/milano/Brand.tsx` auf grauer Fläche — im Karussell, in den
+drei Karten, im Bilderstreifen. Die Flächen haben schon das richtige
+Format; ein echtes Foto tritt an dieselbe Stelle, ohne dass sich am Aufbau
+etwas ändert.
