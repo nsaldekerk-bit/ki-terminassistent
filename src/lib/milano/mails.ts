@@ -46,9 +46,14 @@ export function mitarbeiterName(termin: Termin): string {
   return TEAM_BESTAETIGT ? name : `[${name}]`;
 }
 
-/** Preis, in Klammern solange die Preisliste nicht bestätigt ist. */
+/*
+ * Preis mit Hinweis, solange die Liste nicht bestätigt ist. Bewusst keine
+ * eckigen Klammern wie beim Team: Die Seite kennzeichnet Preise mit dem
+ * Wort „Beispielpreise“, und in einer Bestätigung läse sich „[32 €]“ wie
+ * ein Fehler statt wie ein Vorbehalt.
+ */
 export function preisText(cent: number): string {
-  return PREISE_BESTAETIGT ? preis(cent) : `[${preis(cent)}]`;
+  return PREISE_BESTAETIGT ? preis(cent) : `${preis(cent)} (Beispielpreis)`;
 }
 
 /** Der Link, mit dem der Gast seinen Termin selbst absagt. */
