@@ -56,6 +56,13 @@ const clips = [
     prepare: async (page) => { const y = await findY(page, 'Bringt Ihre Website'); page.__y = y; await at(y - 330)(page); },
     perFrame: async (page, i) => { const y = page.__y; await scrollPath(y - 330, y - 170, 0, 49)(page, i); } },
   booking,
+  // calmer takes for the second cut: ~2.6 s each, gentle scroll
+  { name: 'c_hero', path: '/', frames: 80, restartAnims: true, prepare: at(0) },
+  { name: 'c_dhero', device: 'desktop', path: '/', frames: 80, restartAnims: true, prepare: at(0), perFrame: scrollPath(0, 90, 30, 79) },
+  { name: 'c_leist', path: '/leistungen', frames: 80, prepare: at(430), perFrame: scrollPath(430, 900, 0, 79) },
+  { name: 'c_auto', path: '/leistungen', frames: 80, prepare: at(2230), perFrame: scrollPath(2230, 2700, 0, 79) },
+  { name: 'c_check', path: '/website-check', frames: 80, restartAnims: true, prepare: at(0), perFrame: scrollPath(0, 440, 12, 79) },
+  { name: 'c_team', path: '/', frames: 80, prepare: at(8120), perFrame: scrollPath(8120, 8470, 0, 79) },
 ];
 
 (async () => {

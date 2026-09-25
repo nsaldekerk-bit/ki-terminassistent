@@ -9,9 +9,9 @@ const path = require('path');
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   page.on('console', (m) => { if (m.type() === 'error') console.log('console:', m.text()); });
   page.on('pageerror', (e) => console.log('pageerror:', e.message));
-  await page.goto('file://' + path.join(__dirname, 'reel.html'));
+  await page.goto('file://' + path.join(__dirname, process.env.HTML || 'reel.html'));
   await page.evaluate(() => window.ready);
-  if (+a === 0) fs.writeFileSync('sfx.json', JSON.stringify(await page.evaluate(() => ({ meta: window.META, sfx: window.SFX })), null, 1));
+  if (+a === 0) fs.writeFileSync(process.env.SFX || 'sfx.json', JSON.stringify(await page.evaluate(() => ({ meta: window.META, sfx: window.SFX })), null, 1));
   const cdp = await page.context().newCDPSession(page);
   const t0 = Date.now();
   for (let f = +a; f < +b; f += +step) {

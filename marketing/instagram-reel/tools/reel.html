@@ -3,876 +3,445 @@
 <head>
 <meta charset="utf-8">
 <title>Westfalia Digital Reel</title>
-
 <link href="fonts/fonts.css" rel="stylesheet">
 <style>
-  :root {
-    --royal: #1f6fff; --royal-dark: #1657d6; --royal-light: #5b9bff;
-    --navy: #071a35; --navy-light: #0c2851; --ink: #040b18;
-  }
+  :root { --royal: #1f6fff; --royal-light: #5b9bff; --navy: #071a35; --ink: #040b18; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #040b18; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
   body { font-family: Inter, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
-  #frame { position: absolute; inset: 0; overflow: hidden; background: #040b18; }
-  #stage { position: absolute; inset: 0; transform-origin: 540px 960px; }
-  .abs { position: absolute; }
+  #frame { position: absolute; inset: 0; overflow: hidden; }
   .layer { position: absolute; inset: 0; }
-  .hidden { display: none !important; }
 
-  /* ---------- background ---------- */
-  #bg { background: radial-gradient(120% 80% at 50% 30%, #0c2851 0%, #071a35 45%, #030914 100%); }
-  .blob { position: absolute; border-radius: 50%; }
-  #grid {
-    position: absolute; left: -540px; right: -540px; top: 1100px; height: 1800px;
-    background-image:
-      linear-gradient(rgba(91,155,255,.22) 2px, transparent 2px),
-      linear-gradient(90deg, rgba(91,155,255,.22) 2px, transparent 2px);
-    background-size: 120px 120px;
-    transform-origin: 50% 0;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 60%, transparent 100%);
-  }
-  .dot { position: absolute; border-radius: 50%; background: #9cc3ff; }
+  /* background: deep navy with two slow soft light sources */
+  #bg { background: linear-gradient(180deg, #0a1f40 0%, #071a35 38%, #040d1d 100%); }
+  .glow { position: absolute; border-radius: 50%; }
+  #vignette { background: radial-gradient(120% 85% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,.35) 100%); }
 
-  /* ---------- device mockups ---------- */
-  .phone {
-    position: absolute; width: 736px; height: 1551px; left: 172px; top: 184px;
-    border-radius: 104px; background: linear-gradient(145deg, #2b3547, #0b0f19 40%, #1d2433);
-    padding: 18px; transform-origin: 50% 50%;
-    box-shadow: 0 80px 140px -30px rgba(0,0,0,.75), 0 0 0 3px #3a465c inset, 0 0 0 1px #000;
-  }
+  /* devices */
+  .phone { position: absolute; width: 736px; height: 1551px; border-radius: 104px; padding: 18px;
+    background: linear-gradient(150deg, #3a4558 0%, #11161f 22%, #0b0f17 70%, #2a3345 100%);
+    box-shadow: 0 90px 160px -40px rgba(0,0,0,.8), 0 0 0 2px #465368 inset, 0 0 0 1px #05070b; transform-origin: 50% 50%; }
   .phone .screen { position: relative; width: 700px; height: 1515px; border-radius: 86px; overflow: hidden; background: #0b1526; }
-  .phone .screen img.frame { position: absolute; left: 0; top: 0; width: 700px; height: 1515px; }
-  .phone .island { position: absolute; left: 50%; top: 40px; width: 190px; height: 54px; margin-left: -95px; border-radius: 30px; background: #000; }
-  .phone .btn { position: absolute; background: #1f2735; border-radius: 4px; }
-  .phone .glare { position: absolute; inset: 18px; border-radius: 86px; pointer-events: none;
-    background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.13) 45%, rgba(255,255,255,0) 60%);
-    background-size: 300% 100%; }
-  .glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(31,111,255,.55), rgba(31,111,255,0)); }
+  .phone .screen img { position: absolute; left: 0; top: 0; width: 700px; height: 1515px; }
+  .phone .island { position: absolute; left: 50%; top: 40px; width: 180px; height: 52px; margin-left: -90px; border-radius: 26px; background: #000; }
+  .phone .glare { position: absolute; inset: 18px; border-radius: 86px;
+    background: linear-gradient(120deg, rgba(255,255,255,0) 35%, rgba(255,255,255,.07) 48%, rgba(255,255,255,0) 60%); background-size: 300% 100%; }
+  .phone .btn { position: absolute; background: #222b3a; border-radius: 3px; }
 
-  .browser {
-    position: absolute; width: 980px; left: 50px; top: 600px; border-radius: 26px; overflow: hidden;
-    background: #0e1b31; transform-origin: 50% 50%;
-    box-shadow: 0 60px 120px -20px rgba(0,0,0,.7), 0 0 0 2px rgba(255,255,255,.08);
-  }
-  .browser .bar { height: 64px; background: #16243d; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
-  .browser .bar i { width: 18px; height: 18px; border-radius: 50%; display: block; }
-  .browser .url { margin-left: 22px; flex: 1; height: 38px; border-radius: 19px; background: #0b1526; color: #cfe0ff;
-    font: 600 20px Inter; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: .2px; }
-  .browser img.frame { display: block; width: 980px; height: 612.5px; }
+  .browser { position: absolute; width: 980px; border-radius: 22px; overflow: hidden; background: #0e1b31; transform-origin: 50% 50%;
+    box-shadow: 0 70px 140px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.1); }
+  .browser .bar { height: 58px; background: #15223a; display: flex; align-items: center; padding: 0 22px; gap: 10px; }
+  .browser .bar i { width: 15px; height: 15px; border-radius: 50%; display: block; background: #34425c; }
+  .browser .url { margin: 0 auto; width: 420px; height: 34px; border-radius: 17px; background: #0b1526; color: #b9ccef;
+    font: 500 18px Inter; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .browser img { display: block; width: 980px; height: 612.5px; }
 
-  .full { position: absolute; left: 0; top: 0; width: 1080px; height: 2337px; transform-origin: 540px 960px; }
+  /* titles */
+  .title { position: absolute; left: 60px; right: 60px; text-align: center; }
+  .eyebrow { font: 700 25px Inter; letter-spacing: .2em; color: #8db8ff; text-transform: uppercase; overflow: hidden; height: 34px; }
+  .eyebrow span, .tl span { display: inline-block; will-change: transform; }
+  .tl { overflow: hidden; font-family: Montserrat; font-weight: 800; letter-spacing: -.02em; line-height: 1.08; padding: 0 0 .1em; white-space: nowrap; }
+  .tl b { font-weight: 800; color: var(--royal-light); }
+  .sub { font: 500 30px Inter; color: rgba(214,228,255,.82); overflow: hidden; line-height: 1.35; white-space: nowrap; }
 
-  /* ---------- typography ---------- */
-  .cap { position: absolute; left: 0; right: 0; text-align: center; font-family: Montserrat; font-weight: 900;
-    letter-spacing: -1.5px; line-height: 1; white-space: nowrap; }
-  .cap .w { display: inline-block; position: relative; margin: 0 .12em; will-change: transform; }
-  .cap .hl { color: #fff; padding: .08em .22em .12em; }
-  .cap .hl::before { content: ''; position: absolute; inset: 0; background: var(--royal); border-radius: .14em;
-    transform: scaleX(var(--hx, 1)) skewX(-6deg); transform-origin: left center; z-index: -1;
-    box-shadow: 0 18px 50px -12px rgba(31,111,255,.9); }
-  .cap .blue { color: var(--royal-light); }
-  .shadowed { text-shadow: 0 10px 40px rgba(0,0,0,.55); }
+  .progress { display: flex; gap: 10px; justify-content: center; margin: 18px 0 10px; }
+  .progress i { display: block; width: 92px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.16); overflow: hidden; }
+  .progress i b { display: block; height: 100%; width: 0; background: var(--royal-light); border-radius: 3px; }
 
-  .pill { position: absolute; display: inline-flex; align-items: center; gap: 14px; padding: 0 30px; height: 76px;
-    border-radius: 38px; font: 700 30px Montserrat; color: #fff; background: rgba(7,26,53,.86);
-    box-shadow: 0 0 0 2px rgba(91,155,255,.45), 0 20px 50px -10px rgba(0,0,0,.6); white-space: nowrap; }
-  .pill .num { width: 46px; height: 46px; border-radius: 50%; background: var(--royal); display: grid; place-items: center;
-    font: 800 24px Montserrat; }
+  .cta { position: absolute; left: 540px; width: 640px; height: 132px; margin-left: -320px; border-radius: 66px;
+    background: linear-gradient(180deg, #3a82ff 0%, #1f6fff 60%, #1a62e6 100%);
+    display: flex; align-items: center; justify-content: center; gap: 22px; font: 800 48px Montserrat; letter-spacing: -.01em;
+    box-shadow: 0 30px 70px -22px rgba(31,111,255,.85), inset 0 1px 0 rgba(255,255,255,.25); overflow: hidden; }
+  .cta svg { width: 50px; height: 50px; }
+  .shine { position: absolute; top: 0; bottom: 0; width: 160px; transform: skewX(-20deg);
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.35), rgba(255,255,255,0)); }
 
-  .chip { position: absolute; display: inline-flex; align-items: center; gap: 12px; height: 70px; padding: 0 28px;
-    border-radius: 35px; background: #fff; color: #071a35; font: 700 28px Montserrat; white-space: nowrap;
-    box-shadow: 0 18px 40px -12px rgba(0,0,0,.55); }
-  .chip svg { width: 30px; height: 30px; }
+  .tap { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%;
+    background: rgba(255,255,255,.35); box-shadow: 0 0 0 3px rgba(255,255,255,.85), 0 6px 18px rgba(0,0,0,.25); }
+  .tapring { position: absolute; border-radius: 50%; border: 3px solid rgba(255,255,255,.9); }
 
-  .bigbtn { position: absolute; left: 540px; top: 1010px; width: 800px; height: 200px; margin-left: -400px; margin-top: -100px;
-    border-radius: 100px; background: linear-gradient(180deg, #3d86ff 0%, #1f6fff 55%, #1657d6 100%);
-    display: flex; align-items: center; justify-content: center; gap: 30px; font: 800 74px Montserrat; letter-spacing: -1px;
-    box-shadow: 0 40px 90px -20px rgba(31,111,255,.95), 0 0 0 3px rgba(255,255,255,.18) inset; overflow: hidden; }
-  .bigbtn svg { width: 84px; height: 84px; }
-  .shine { position: absolute; top: -20%; bottom: -20%; width: 180px;
-    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0)); transform: skewX(-20deg); }
-  .ring { position: absolute; border-radius: 999px; border: 6px solid rgba(91,155,255,.9); }
+  .check { position: absolute; left: 480px; width: 120px; height: 120px; border-radius: 50%; background: #22c55e;
+    box-shadow: 0 22px 50px -14px rgba(34,197,94,.75); }
+  .check svg { position: absolute; left: 0; top: 0; width: 120px; height: 120px; }
 
-  .tap { position: absolute; width: 96px; height: 96px; margin: -48px 0 0 -48px; border-radius: 50%;
-    background: rgba(255,255,255,.55); box-shadow: 0 0 0 5px rgba(255,255,255,.9), 0 10px 30px rgba(0,0,0,.35); }
-  .tapring { position: absolute; border-radius: 50%; border: 5px solid #fff; }
-
-  #flash { background: #fff; }
-  #vignette { background: radial-gradient(130% 90% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
-  #grain { opacity: .045; mix-blend-mode: overlay; }
-  .leak { position: absolute; border-radius: 50%; mix-blend-mode: screen; }
-  .slice { position: absolute; top: -400px; height: 2800px; width: 360px; background: var(--royal); transform-origin: 50% 50%; }
-  .confetti { position: absolute; width: 22px; height: 12px; border-radius: 3px; }
-  .bug { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 14px;
-    height: 64px; padding: 0 26px 0 12px; border-radius: 32px; background: rgba(4,11,24,.72);
-    box-shadow: 0 0 0 2px rgba(255,255,255,.12); font: 700 26px Inter; color: #e6efff; white-space: nowrap; }
-  .bug svg { width: 44px; height: 44px; }
+  .opts { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: 34px; font: 600 30px Inter; color: rgba(235,242,255,.92); }
+  .opts span { display: inline-flex; align-items: center; gap: 12px; }
+  .opts svg { width: 30px; height: 30px; color: #4ade80; }
+  #fade { background: #040b18; }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <filter id="mblur" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur id="mblurStd" stdDeviation="0 0"/></filter>
-    <filter id="mblurV" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur id="mblurVStd" stdDeviation="0 0"/></filter>
-    <filter id="glitch" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
-      <feTurbulence id="glTurb" type="fractalNoise" baseFrequency="0.0001 0.06" numOctaves="1" seed="1" result="noise"/>
-      <feDisplacementMap id="glDisp" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="B" result="disp"/>
-      <feColorMatrix in="disp" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/>
-      <feOffset id="glR" in="r" dx="0" dy="0" result="r2"/>
-      <feColorMatrix in="disp" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
-      <feColorMatrix in="disp" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/>
-      <feOffset id="glB" in="b" dx="0" dy="0" result="b2"/>
-      <feBlend mode="screen" in="r2" in2="g" result="rg"/>
-      <feBlend mode="screen" in="rg" in2="b2"/>
-    </filter>
-  </defs>
-</svg>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <filter id="mb" x="-10%" y="-5%" width="120%" height="110%"><feGaussianBlur id="mbStd" stdDeviation="0 0"/></filter>
+</defs></svg>
 <div id="frame">
-  <div id="stage">
-    <div id="bg" class="layer"></div>
-    <div id="scenes" class="layer"></div>
-  </div>
-  <div id="fx" class="layer"></div>
+  <div id="bg" class="layer"></div>
+  <div id="world" class="layer"></div>
+  <div id="ui" class="layer"></div>
   <div id="vignette" class="layer"></div>
-  <div id="grain" class="layer"></div>
-  <div id="flash" class="layer" style="opacity:0"></div>
+  <div id="fade" class="layer" style="opacity:0"></div>
 </div>
-
 <script>
 // =====================================================================
-//  Timing
+//  Basics
 // =====================================================================
-const FPS = 30, DURATION = 32, BPM = 120, BEAT = 60 / BPM;
-const CLIPS = { m_hero: 50, m_system: 60, m_24h: 55, m_team: 55, m_leist: 60, m_auto: 60, m_check: 60,
-  d_hero: 50, d_leist: 50, d_24h: 50, m_booking: 330 };
-const BOOK_T0 = 16.0;                     // booking clip frame 0 == this time
-const SCR = 700 / 390;                    // phone screen px per site CSS px
+const FPS = 30, DURATION = 32, BPM = 120, BEAT = 0.5;
+const CLIPS = { c_hero: 80, c_dhero: 80, c_leist: 80, c_auto: 80, c_check: 80, c_team: 80, m_booking: 330 };
+const SCR = 700 / 390;
+const BOOK_T0 = 16.0;
+const bt = (f) => BOOK_T0 + f / 30;
+const DONE_T = bt(264);
 
-// =====================================================================
-//  Helpers
-// =====================================================================
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, k) => a + (b - a) * k;
 const prog = (t, a, b) => clamp((t - a) / (b - a));
 const E = {
-  lin: (t) => t,
-  inCubic: (t) => t * t * t,
-  outCubic: (t) => 1 - Math.pow(1 - t, 3),
-  inOutCubic: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+  inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+  out: (t) => 1 - Math.pow(1 - t, 3),
+  in: (t) => t * t * t,
   outExpo: (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t)),
-  inExpo: (t) => (t <= 0 ? 0 : Math.pow(2, 10 * t - 10)),
-  inOutExpo: (t) => t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2,
-  outBack: (t) => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
-  outElastic: (t) => t <= 0 ? 0 : t >= 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1,
+  inOutQuint: (t) => (t < 0.5 ? 16 * t ** 5 : 1 - Math.pow(-2 * t + 2, 5) / 2),
+  outBackSoft: (t) => { const c1 = 1.2, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
 };
-function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const el = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (parent) parent.appendChild(e); return e; };
 const css = (e, o) => { for (const k in o) e.style[k] = o[k]; };
 const show = (e, on) => { e.style.display = on ? '' : 'none'; };
 const clipURL = (n, i) => `clips/${n}/${String(clamp(Math.round(i), 0, CLIPS[n] - 1)).padStart(4, '0')}.jpg`;
-/** Beat pulse: 1 right on a beat, decaying to 0. */
-const beatPulse = (t, decay = 0.18) => { const ph = ((t % BEAT) + BEAT) % BEAT; return Math.exp(-ph / decay * 3) ; };
+const pending = [];
+function setSrc(img, url) { if (img.dataset.src !== url) { img.dataset.src = url; img.src = url; pending.push(img.decode().catch(() => {})); } }
 
 const ICON = {
   cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
-  lock: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7fb0ff" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
-  logo: (s = 48) => `<svg viewBox="0 0 48 48" width="${s}" height="${s}"><defs><linearGradient id="lg${s}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1657D6"/><stop offset="1" stop-color="#3D86FF"/></linearGradient></defs><circle cx="24" cy="24" r="24" fill="#F4F7FB"/><path d="M13 16 L19.5 33 L24 23 L28.5 33" fill="none" stroke="#0B1B33" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.5 33 L37 12" fill="none" stroke="url(#lg${s})" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  tick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#7fa6e0" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  logo: (s) => `<svg viewBox="0 0 48 48" width="${s}" height="${s}"><defs><linearGradient id="lg${s}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1657D6"/><stop offset="1" stop-color="#3D86FF"/></linearGradient></defs><circle cx="24" cy="24" r="24" fill="#F4F7FB"/><path d="M13 16 L19.5 33 L24 23 L28.5 33" fill="none" stroke="#0B1B33" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.5 33 L37 12" fill="none" stroke="url(#lg${s})" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 };
 
-async function boot() {
-await Promise.all(['600','700','800','900'].map((w) => document.fonts.load(`${w} 60px Montserrat`, 'ÄÖÜäöüß Termin')).concat(
-  ['400','500','600','700'].map((w) => document.fonts.load(`${w} 30px Inter`, 'westfaliadigital.de')),
-  [document.fonts.load('100px "Noto Color Emoji"', '👆')]));
-await document.fonts.ready;
-// =====================================================================
-//  Global FX events (also drive the sound design → exported as SFX)
-// =====================================================================
-const SFX = [];      // {t, type, gain?}
-const SHAKES = [];   // {t, amp, dur}
-const FLASHES = [];  // {t, amp, dur}
+// Sound events share this timeline (exported as SFX for audio2.py)
+const SFX = [];
 const sfx = (t, type, gain = 1, extra = {}) => SFX.push({ t: +t.toFixed(4), type, gain, ...extra });
-const shake = (t, amp, dur = 0.35) => SHAKES.push({ t, amp, dur });
-const flash = (t, amp, dur = 0.25) => FLASHES.push({ t, amp, dur });
 
-// =====================================================================
-//  Building blocks
-// =====================================================================
-const scenesRoot = document.getElementById('scenes');
-const fxRoot = document.getElementById('fx');
-const imgs = [];   // {img, get(t) -> url}
-const pending = [];
+async function boot() {
+await Promise.all(['600', '700', '800'].map((w) => document.fonts.load(`${w} 60px Montserrat`, 'ÄÖÜäöüß Termin'))
+  .concat(['400', '500', '600', '700'].map((w) => document.fonts.load(`${w} 30px Inter`, 'westfaliadigital.de ÄÖÜ'))));
+await document.fonts.ready;
 
-function frameImg(parent, cls) { const i = el('img', 'frame ' + (cls || ''), parent); i.decoding = 'sync'; return i; }
-function setSrc(img, url) { if (img.dataset.src !== url) { img.dataset.src = url; img.src = url; pending.push(img.decode().catch(() => {})); } }
+const world = document.getElementById('world');
+const ui = document.getElementById('ui');
+const scrim = el('div', 'layer', ui);
+scrim.style.background = 'linear-gradient(180deg, rgba(5,14,30,1) 0%, rgba(5,14,30,1) 28.8%, rgba(5,14,30,0) 31%)';
+const bg = document.getElementById('bg');
 
+// ---------------------------------------------------------------------
+//  Background light
+// ---------------------------------------------------------------------
+const glows = [
+  { c: 'rgba(31,111,255,.42)', r: 700, x: 540, y: 1180, ax: 120, ay: 60, sp: 0.07 },
+  { c: 'rgba(91,155,255,.20)', r: 520, x: 200, y: 320, ax: 80, ay: 50, sp: 0.05 },
+].map((g) => { const d = el('div', 'glow', bg); css(d, { width: 2 * g.r + 'px', height: 2 * g.r + 'px', background: `radial-gradient(closest-side, ${g.c}, rgba(0,0,0,0))` }); return { ...g, d }; });
+function renderBg(t) {
+  for (const g of glows) css(g.d, { left: (g.x - g.r + Math.sin(t * g.sp * 6.283) * g.ax) + 'px', top: (g.y - g.r + Math.cos(t * g.sp * 5.1) * g.ay) + 'px' });
+}
+
+// ---------------------------------------------------------------------
+//  Titles with masked line reveals
+// ---------------------------------------------------------------------
+const titles = [];
+/** {t0, t1, y, eyebrow, lines:[html], size, sub, progress:{step}} */
+function title(def) {
+  const box = el('div', 'title', ui);
+  box.style.top = def.y + 'px';
+  const parts = [];
+  if (def.eyebrow) { const e = el('div', 'eyebrow', box); parts.push({ span: el('span', '', e, def.eyebrow), d: 0 }); }
+  if (def.progress) {
+    const p = el('div', 'progress', box); def.bars = [];
+    for (let i = 0; i < 5; i++) def.bars.push(el('b', '', el('i', '', p)));
+    parts.push({ span: p, d: 0.02, fadeOnly: true });
+  }
+  const lineEls = def.lines.map((h, i) => { const l = el('div', 'tl', box); l.style.fontSize = (def.size || 84) + 'px'; const s = el('span', '', l, h); parts.push({ span: s, d: 0.06 + i * 0.07 }); return l; });
+  if (def.sub) { const s = el('div', 'sub', box); s.style.marginTop = '14px'; parts.push({ span: el('span', '', s, def.sub), d: 0.2 }); }
+  // one size for all lines that fits the widest
+  let fs = def.size || 84;
+  while (lineEls.some((l) => l.firstChild.offsetWidth > 960) && fs > 40) { fs -= 2; lineEls.forEach((l) => (l.style.fontSize = fs + 'px')); }
+  def.box = box; def.parts = parts; titles.push(def); return def;
+}
+function renderTitle(d, t) {
+  const on = t >= d.t0 - 0.01 && t < d.t1 + 0.45;
+  show(d.box, on); if (!on) return;
+  for (const p of d.parts) {
+    const kin = E.outExpo(prog(t, d.t0 + p.d, d.t0 + p.d + 0.75));
+    const kout = E.in(prog(t, d.t1 + p.d * 0.5, d.t1 + p.d * 0.5 + 0.32));
+    if (p.fadeOnly) { p.span.style.opacity = kin * (1 - kout); continue; }
+    p.span.style.transform = `translateY(${(1 - kin) * 105 - kout * 105}%)`;
+  }
+  if (d.progress) d.bars.forEach((b, i) => {
+    const st = d.progress[i]; // [start, end] fill times
+    b.style.width = (st ? E.inOut(prog(t, st[0], st[0] + 0.35)) * 100 : 0) + '%';
+  });
+}
+
+// ---------------------------------------------------------------------
+//  Devices
+// ---------------------------------------------------------------------
 function makePhone(parent) {
   const p = el('div', 'phone', parent);
   const scr = el('div', 'screen', p);
-  const img = frameImg(scr);
+  const a = el('img', '', scr), b = el('img', '', scr);
   const taps = el('div', 'layer', scr);
   el('div', 'island', p);
-  const b1 = el('div', 'btn', p); css(b1, { left: '-6px', top: '300px', width: '6px', height: '110px' });
-  const b2 = el('div', 'btn', p); css(b2, { left: '-6px', top: '440px', width: '6px', height: '110px' });
-  const b3 = el('div', 'btn', p); css(b3, { right: '-6px', top: '360px', width: '6px', height: '170px' });
+  [[-5, 300, 110], [-5, 440, 110]].forEach(([x, y, h]) => { const d = el('div', 'btn', p); css(d, { left: x + 'px', top: y + 'px', width: '5px', height: h + 'px' }); });
+  { const d = el('div', 'btn', p); css(d, { right: '-5px', top: '360px', width: '5px', height: '170px' }); }
   const glare = el('div', 'glare', p);
-  return { root: p, img, taps, glare };
+  return { root: p, a, b, taps, glare };
+}
+function placePhone(ph, { cx = 540, cy = 960, s = 1, rx = 0, ry = 0, rz = 0, op = 1, blur = 0 }) {
+  css(ph.root, { left: (cx - 368) + 'px', top: (cy - 775.5) + 'px', opacity: op,
+    transform: `perspective(3000px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`,
+    filter: blur > 0.4 ? 'url(#mb)' : 'none' });
+  if (blur > 0.4) document.getElementById('mbStd').setAttribute('stdDeviation', `${blur} 0`);
+  ph.glare.style.backgroundPosition = `${60 - ry * 3}% 0`;
+}
+/** Screen content: `cur` shown, `next` slides in from below as k goes 0→1. */
+function setScreen(ph, cur, next, k) {
+  setSrc(ph.a, cur);
+  if (next && k > 0) {
+    show(ph.b, true); setSrc(ph.b, next);
+    const e = E.inOutQuint(k);
+    css(ph.a, { transform: `translateY(${-e * 28}%)`, filter: `brightness(${1 - e * 0.5})` });
+    css(ph.b, { transform: `translateY(${(1 - e) * 100}%)`, boxShadow: '0 -30px 60px rgba(0,0,0,.35)' });
+  } else { show(ph.b, false); css(ph.a, { transform: 'none', filter: 'none' }); }
 }
 function makeBrowser(parent) {
   const b = el('div', 'browser', parent);
-  const bar = el('div', 'bar', b);
-  el('i', '', bar).style.background = '#ff5f57';
-  el('i', '', bar).style.background = '#febc2e';
-  el('i', '', bar).style.background = '#28c840';
+  const bar = el('div', 'bar', b); el('i', '', bar); el('i', '', bar); el('i', '', bar);
   el('div', 'url', bar, ICON.lock + 'westfaliadigital.de');
-  const img = frameImg(b);
-  return { root: b, img };
+  return { root: b, img: el('img', '', b) };
 }
-/** Positions a phone: center (cx, cy), scale s, 3D rotation. */
-function placePhone(ph, { cx = 540, cy = 960, s = 1, rx = 0, ry = 0, rz = 0, op = 1, blur = 0 }) {
-  css(ph.root, {
-    left: (cx - 368) + 'px', top: (cy - 775.5) + 'px', opacity: op,
-    transform: `perspective(2600px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`,
-    filter: blur > 0.3 ? `blur(${blur}px)` : 'none',
-  });
-  ph.glare.style.backgroundPosition = `${(100 - (ry + 30) * 2)}% 0`;
+function placeBrowser(br, { cx = 540, cy = 1000, s = 1, rx = 0, ry = 0, op = 1, blur = 0 }) {
+  css(br.root, { left: (cx - 490) + 'px', top: (cy - 335) + 'px', opacity: op,
+    transform: `perspective(2600px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`, filter: blur > 0.4 ? `blur(${blur * 0.25}px)` : 'none' });
 }
-function placeBrowser(br, { cx = 540, cy = 960, s = 1, rx = 0, ry = 0, rz = 0, op = 1 }) {
-  css(br.root, { left: (cx - 490) + 'px', top: (cy - 338) + 'px', opacity: op,
-    transform: `perspective(2200px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})` });
-}
-
-/**
- * Kinetic caption. lines: [[{w, cls}], ...]; each word gets an entrance time.
- * spec = { y, size, t0, step, out, style }
- */
-function makeCaption(parent, lines, { y, size = 96, color = '#fff', gap = 1.08, maxW = 960 }) {
-  const box = el('div', '', parent); css(box, { position: 'absolute', left: 0, right: 0, top: y + 'px' });
-  const words = [];
-  lines.forEach((line, li) => {
-    const row = el('div', 'cap shadowed', box);
-    css(row, { top: (li * size * gap) + 'px', fontSize: size + 'px', color });
-    const inner = el('span', '', row); inner.style.display = 'inline-block';
-    line.forEach((w) => {
-      const s = el('span', 'w ' + (w.cls || ''), inner, w.w);
-      words.push({ el: s, at: w.at, cls: w.cls || '' });
-    });
-    // fit width
-    let fs = size; while (inner.offsetWidth > maxW && fs > 30) { fs -= 2; row.style.fontSize = fs + 'px'; }
-  });
-  return { box, words };
-}
-/** Animate caption words: each word pops at its `at`, the whole caption exits at tOut. */
-function animCaption(c, t, tOut, mode = 'pop') {
-  const outK = tOut != null ? E.inCubic(prog(t, tOut - 0.12, tOut)) : 0;
-  show(c.box, t >= Math.min(...c.words.map((w) => w.at)) - 0.01 && (tOut == null || t < tOut));
-  for (const w of c.words) {
-    const k = prog(t, w.at, w.at + 0.22);
-    const e = E.outBack(k);
-    const bl = (1 - E.outCubic(k)) * 16;
-    let tf;
-    if (mode === 'drop') tf = `translateY(${(1 - e) * -140}px) scale(${lerp(1.5, 1, E.outExpo(k))})`;
-    else if (mode === 'rise') tf = `translateY(${(1 - E.outExpo(k)) * 90}px)`;
-    else tf = `scale(${lerp(2.1, 1, E.outExpo(k)) * (0.9 + 0.1 * e)})`;
-    tf += ` translateY(${-outK * 60}px)`;
-    css(w.el, { transform: tf, opacity: t < w.at ? 0 : clamp(k * 3) * (1 - outK), filter: bl > 0.5 ? `blur(${bl}px)` : 'none' });
-    if (w.cls.includes('hl')) w.el.style.setProperty('--hx', E.outExpo(prog(t, w.at + 0.05, w.at + 0.3)));
-  }
-}
-
-function tapIndicator(parent) {
-  const d = el('div', 'tap', parent); const r = el('div', 'tapring', parent);
-  return { d, r };
-}
-/** Tap visual at local time lt relative to tap time (0 = press). */
+function tapIndicator(parent) { return { d: el('div', 'tap', parent), r: el('div', 'tapring', parent) }; }
 function animTap(tp, lt, x, y) {
-  const vis = lt > -0.25 && lt < 0.45;
-  show(tp.d, vis); show(tp.r, vis && lt > 0);
-  if (!vis) return;
-  const approach = E.outCubic(prog(lt, -0.25, 0));
-  const press = lt >= 0 ? 1 - 0.18 * Math.sin(Math.min(1, lt / 0.16) * Math.PI) : 1;
-  const out = prog(lt, 0.2, 0.45);
-  css(tp.d, { left: x + 'px', top: y + 'px', opacity: approach * (1 - out), transform: `scale(${lerp(1.6, 1, approach) * press})` });
-  const rk = E.outCubic(prog(lt, 0, 0.42));
-  const R = 40 + rk * 110;
-  css(tp.r, { left: (x - R) + 'px', top: (y - R) + 'px', width: 2 * R + 'px', height: 2 * R + 'px', opacity: (1 - rk) * 0.95 });
+  const vis = lt > -0.22 && lt < 0.5;
+  show(tp.d, vis); show(tp.r, vis && lt > 0); if (!vis) return;
+  const a = E.out(prog(lt, -0.22, 0));
+  const press = lt >= 0 ? 1 - 0.12 * Math.sin(Math.min(1, lt / 0.16) * Math.PI) : 1;
+  const out = prog(lt, 0.25, 0.5);
+  css(tp.d, { left: x + 'px', top: y + 'px', opacity: a * (1 - out), transform: `scale(${lerp(1.3, 1, a) * press})` });
+  const rk = E.out(prog(lt, 0, 0.45)), R = 34 + rk * 60;
+  css(tp.r, { left: (x - R) + 'px', top: (y - R) + 'px', width: 2 * R + 'px', height: 2 * R + 'px', opacity: (1 - rk) * 0.8 });
 }
 
 // =====================================================================
-//  Background (always on)
+//  Titles (all share the same slot at the top)
 // =====================================================================
-const bg = document.getElementById('bg');
-const blobs = [
-  { c: 'rgba(31,111,255,.55)', r: 520, x: 250, y: 420, ax: 180, ay: 140, sp: 0.23, ph: 0 },
-  { c: 'rgba(91,155,255,.35)', r: 460, x: 860, y: 1250, ax: 160, ay: 220, sp: 0.19, ph: 2 },
-  { c: 'rgba(22,87,214,.55)', r: 620, x: 520, y: 1650, ax: 260, ay: 120, sp: 0.15, ph: 4 },
-  { c: 'rgba(56,189,248,.22)', r: 380, x: 900, y: 300, ax: 120, ay: 160, sp: 0.27, ph: 1 },
-].map((b) => { const d = el('div', 'blob', bg); css(d, { width: 2 * b.r + 'px', height: 2 * b.r + 'px',
-  background: `radial-gradient(closest-side, ${b.c}, rgba(0,0,0,0))` }); return { ...b, d }; });
-const grid = el('div', '', bg); grid.id = 'grid';
-const dots = []; { const R = rng(7); for (let i = 0; i < 46; i++) { const d = el('div', 'dot', bg); const s = 3 + R() * 7;
-  css(d, { width: s + 'px', height: s + 'px' }); dots.push({ d, x: R() * 1080, y: R() * 1920, v: 30 + R() * 90, a: 0.15 + R() * 0.5, w: R() * 6 }); } }
-function renderBg(t) {
-  const pulse = beatPulse(t) * (t > 2 && t < 14 || t > 16 && t < 28 ? 1 : 0.4);
-  for (const b of blobs) css(b.d, { left: (b.x - b.r + Math.sin(t * b.sp * 2 * Math.PI / 2 + b.ph) * b.ax) + 'px',
-    top: (b.y - b.r + Math.cos(t * b.sp * 2 * Math.PI / 2.3 + b.ph) * b.ay) + 'px', transform: `scale(${1 + pulse * 0.06})` });
-  css(grid, { transform: `perspective(700px) rotateX(64deg)`, backgroundPosition: `0 ${(t * 160) % 120}px`, opacity: 0.55 + pulse * 0.25 });
-  for (const p of dots) { const y = ((p.y - t * p.v) % 1920 + 1920) % 1920; css(p.d, { left: (p.x + Math.sin(t + p.w) * 30) + 'px', top: y + 'px', opacity: p.a * (0.7 + pulse * 0.6) }); }
-}
+const TOP = 200;
+title({ t0: -0.35, t1: 1.72, y: 690, eyebrow: 'Westfalia Digital', lines: ['Ihre Website bringt', 'keine <b>Anfragen?</b>'], size: 100 });
+title({ t0: 2.05, t1: 3.75, y: TOP, eyebrow: 'Agentur für Wachstum', lines: ['Wir machen', 'Wachstum <b>planbar.</b>'] });
+title({ t0: 4.05, t1: 5.75, y: TOP, eyebrow: 'Marketing · Webseiten · Automatisierung', lines: ['Alles aus', '<b>einer Hand.</b>'] });
+title({ t0: 6.05, t1: 7.75, y: TOP, eyebrow: 'Marketing', lines: ['Mehr Kunden –', '<b>planbar & messbar.</b>'] });
+title({ t0: 8.05, t1: 9.75, y: TOP, eyebrow: 'Automatisierung', lines: ['Keine Anfrage', 'geht <b>verloren.</b>'] });
+title({ t0: 10.05, t1: 11.75, y: TOP, eyebrow: '100 % kostenlos · in 24 Stunden', lines: ['Kostenloser', '<b>Website-Check.</b>'] });
+title({ t0: 12.05, t1: 13.75, y: TOP, eyebrow: 'Persönlich & regional', lines: ['Ihre Ansprechpartner', 'am <b>Niederrhein.</b>'] });
+title({ t0: 14.05, t1: 15.55, y: 690, eyebrow: 'Kostenlos & unverbindlich', lines: ['Bereit für', 'mehr <b>Anfragen?</b>'], size: 96 });
 
-// =====================================================================
-//  Scenes
-// =====================================================================
-const S = [];
-function scene(def) { const root = el('div', 'layer', scenesRoot); def.root = root; def.build && def.build(root, def); S.push(def); return def; }
+// Booking: constant eyebrow + progress, headline per step
+const STEPS = [
+  { a: 16.15, b: bt(52), h: 'Thema wählen', sub: 'Kostenloses Erstgespräch – zu Ihrem Thema' },
+  { a: bt(52) + 0.12, b: bt(92), h: 'Wunschtag wählen' },
+  { a: bt(92) + 0.12, b: bt(128), h: 'Uhrzeit wählen' },
+  { a: bt(128) + 0.12, b: bt(226), h: 'Kontaktdaten eingeben' },
+  { a: bt(226) + 0.12, b: DONE_T - 0.1, h: 'Prüfen & absenden' },
+];
+const fills = STEPS.map((s) => [s.a - 0.05]);
+const bookHead = title({ t0: 16.15, t1: DONE_T - 0.1, y: 150, eyebrow: 'Termin buchen · in unter 1 Minute', lines: [], progress: fills });
+const stepTitles = STEPS.map((s) => title({ t0: s.a, t1: s.b - 0.05, y: 238, lines: [s.h], size: 64, sub: s.sub }));
 
-// ---------- 0.0 – 2.0  HOOK ----------
-scene({
-  t0: 0, t1: 2.0,
-  build(root, s) {
-    s.c1 = makeCaption(root, [
-      [{ w: 'Ihre', at: -0.1 }, { w: 'Website', at: -0.1 }],
-      [{ w: 'bringt', at: 0.5 }, { w: 'keine', at: 0.5 }],
-      [{ w: 'Anfragen?', at: 1.0, cls: 'hl' }],
-    ], { y: 640, size: 150, gap: 1.18 });
-    s.c2 = makeCaption(root, [
-      [{ w: 'Das', at: 1.5 }, { w: 'ändern', at: 1.5, cls: 'blue' }],
-      [{ w: 'wir.', at: 1.5 }],
-    ], { y: 720, size: 170, gap: 1.12 });
-    s.logo = el('div', '', root, ICON.logo(170)); css(s.logo, { position: 'absolute', left: '455px', top: '430px' });
-    [0, 0.5, 1.0].forEach((b, i) => { sfx(b, 'impact', i === 2 ? 1 : 0.8); shake(b, i === 2 ? 26 : 14, 0.3); flash(b, i === 0 ? 0 : 0.18, 0.15); });
-    sfx(1.5, 'glitch', 0.9); shake(1.5, 20, 0.25);
-    sfx(1.45, 'riser_short', 0.9, { dur: 0.55 });
-  },
-  render(t, s) {
-    animCaption(s.c1, t, 1.5, 'pop');
-    animCaption(s.c2, t, null, 'drop');
-    const lk = E.outBack(prog(t, 1.55, 1.8));
-    show(s.logo, t > 1.55);
-    css(s.logo, { transform: `scale(${lk}) rotate(${(1 - lk) * -120}deg)` });
-    // hook group zoom-through at the end
-    const z = E.inExpo(prog(t, 1.72, 2.0));
-    css(s.root, { transform: `scale(${1 + z * 5})`, opacity: 1 - prog(t, 1.9, 2.0), transformOrigin: '540px 900px',
-      filter: z > 0.05 ? `blur(${z * 18}px)` : 'none' });
-  },
-  glitch: [[1.42, 1.62, 1]],
-});
-sfx(1.72, 'whoosh_in', 1.0, { dur: 0.28 });
+// Success
+const okTitle = title({ t0: DONE_T + 0.55, t1: 27.7, y: 300, lines: ['Termin <b>angefragt.</b>'], size: 72, sub: 'Die Bestätigung kommt per E-Mail.' });
+const check = el('div', 'check', ui, '<svg viewBox="0 0 120 120" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M36 61 L53 78 L85 44" pathLength="1" stroke-dasharray="1" /></svg>');
+const checkPath = check.querySelector('path');
 
-// ---------- 2.0 – 4.0  HERO (phone) ----------
-scene({
-  t0: 2.0, t1: 4.0,
-  build(root, s) {
-    s.glow = el('div', 'glow', root); css(s.glow, { width: '1300px', height: '1300px', left: '-110px', top: '460px' });
-    s.ph = makePhone(root);
-    s.bug = el('div', 'bug', root, ICON.logo(44) + 'westfaliadigital.de');
-    s.cap = makeCaption(root, [[{ w: 'Agentur', at: 2.5 }, { w: 'für', at: 2.5 }], [{ w: 'Wachstum', at: 3.0, cls: 'hl' }]], { y: 250, size: 104 });
-    sfx(2.0, 'drop', 1); flash(2.0, 0.9, 0.3); shake(2.0, 22, 0.4);
-    sfx(2.5, 'pop', 0.7); sfx(3.0, 'pop', 0.8);
-  },
-  render(t, s) {
-    const lt = t - 2.0;
-    const k = E.outExpo(prog(lt, 0, 0.6));
-    const ry = lerp(-35, -8, k) + Math.sin(lt * 1.6) * 4;
-    placePhone(s.ph, { cx: 540, cy: lerp(1500, 1210, k), s: lerp(1.6, 0.8, k) + beatPulse(t) * 0.012, rx: lerp(30, 6, k), ry, rz: lerp(-8, 0, k), blur: (1 - k) * 12 });
-    setSrc(s.ph.img, clipURL('m_hero', lt * 30));
-    css(s.bug, { opacity: E.outCubic(prog(lt, 0.2, 0.5)), transform: `translateX(-50%) translateY(${(1 - E.outBack(prog(lt, 0.2, 0.5))) * -40}px)` });
-    animCaption(s.cap, t, null, 'pop');
-    css(s.glow, { opacity: 0.6 + beatPulse(t) * 0.4 });
-    whipOut(s, t, 4.0, -1);
-  },
-});
-
-// helpers for scene exits / entrances
-function whipOut(s, t, T, dir, d = 0.14) {
-  const k = E.inCubic(prog(t, T - d, T));
-  if (k > 0) { s.root.style.transform = `translateX(${dir * k * 1400}px)`; setBlur(s, k * 60, 0); }
-  else if (!s._enter) { s.root.style.transform = ''; setBlur(s, 0, 0); }
-}
-function whipIn(s, t, T, dir, d = 0.16) {
-  const k = 1 - E.outCubic(prog(t, T, T + d));
-  s._enter = k > 0;
-  if (k > 0) { s.root.style.transform = `translateX(${dir * k * 1400}px)`; setBlur(s, k * 60, 0); }
-  else { s.root.style.transform = ''; setBlur(s, 0, 0); }
-}
-function setBlur(s, bx, by) {
-  if (bx > 0.5) { document.getElementById('mblurStd').setAttribute('stdDeviation', `${Math.min(bx, 70)} 0`); s.root.style.filter = 'url(#mblur)'; }
-  else s.root.style.filter = 'none';
-}
-/** Lay out chips centered in one row. */
-function rowChips(chips, y, gap = 22) {
-  const ws = chips.map((c) => c.offsetWidth || 0);
-  const total = ws.reduce((a, b) => a + b, 0) + gap * (chips.length - 1);
-  let x = 540 - total / 2;
-  return ws.map((w) => { const p = x; x += w + gap; return p; });
-}
-
-// ---------- 4.0 – 5.5  HERO desktop (browser 3D) ----------
-scene({
-  t0: 4.0, t1: 5.5,
-  build(root, s) {
-    s.br = makeBrowser(root);
-    s.cap = makeCaption(root, [[{ w: 'Mehr', at: 4.0 }, { w: 'Kunden', at: 4.0, cls: 'blue' }], [{ w: 'für', at: 4.5 }, { w: 'Ihr', at: 4.5 }, { w: 'Unternehmen', at: 4.5 }]], { y: 330, size: 100 });
-    s.cap2 = makeCaption(root, [[{ w: 'Marketing · Webseiten · Automatisierung', at: 5.0 }]], { y: 1380, size: 44 });
-    sfx(3.86, 'whoosh', 1.0, { dur: 0.3 }); sfx(4.5, 'pop', 0.6); sfx(5.0, 'tick', 0.6);
-  },
-  render(t, s) {
-    const lt = t - 4.0;
-    whipIn(s, t, 4.0, 1);
-    placeBrowser(s.br, { cx: 540, cy: 1000, s: 1.02 + lt * 0.05 + beatPulse(t) * 0.01, rx: 12 - lt * 3, ry: -20 + lt * 10, rz: -2 + lt });
-    setSrc(s.br.img, clipURL('d_hero', lt * 30));
-    animCaption(s.cap, t, null, 'rise');
-    animCaption(s.cap2, t, null, 'rise');
-  },
-  glitch: [[5.4, 5.62, 1]],
-});
-
-// ---------- 5.5 – 7.0  SYSTEM full-bleed ----------
-scene({
-  t0: 5.5, t1: 7.0,
-  build(root, s) {
-    s.full = frameImg(root, 'full');
-    s.shade = el('div', 'layer', root); s.shade.style.background = 'linear-gradient(180deg, rgba(4,11,24,0) 62%, rgba(4,11,24,.92) 80%, rgba(4,11,24,.95) 100%)';
-    s.words = ['Marketing', 'Webseite', 'Automatisierung'].map((w, i) => makeCaption(root, [[{ w, at: 5.5 + i * 0.5, cls: i === 1 ? 'hl' : '' }]], { y: 1560, size: 112 }));
-    sfx(5.5, 'glitch', 0.8); sfx(5.5, 'impact', 0.7); shake(5.5, 16);
-    sfx(6.0, 'pop', 0.8); sfx(6.5, 'pop', 0.8); shake(6.0, 8, 0.2); shake(6.5, 8, 0.2);
-  },
-  render(t, s) {
-    const lt = t - 5.5;
-    const z = 1.06 + lt * 0.04 + beatPulse(t) * 0.025;
-    css(s.full, { transform: `translateY(${-160}px) scale(${z})` });
-    setSrc(s.full, clipURL('m_system', lt * 30 * 1.3));
-    s.words.forEach((c, i) => animCaption(c, t, i < 2 ? 5.5 + (i + 1) * 0.5 : null, 'pop'));
-    sliceOut(s, t, 7.0);
-  },
-});
-
-// Slice transition overlay (diagonal royal bars sweep in / out)
-const slices = []; { for (let i = 0; i < 6; i++) { const d = el('div', 'slice', fxRoot); d.style.background = i % 2 ? '#1f6fff' : '#0c2851'; slices.push(d); } }
-function sliceOut() {}
-function renderSlices(t) {
-  const T = 7.0, a = T - 0.2, b = T + 0.24;
-  const on = t > a && t < b;
-  slices.forEach((d, i) => {
-    show(d, on); if (!on) return;
-    const inK = E.inOutCubic(prog(t, a + i * 0.018, T));
-    const outK = E.inOutCubic(prog(t, T + i * 0.018, b));
-    const x = lerp(-420, 1500, 0) ;
-    const pos = i * 200 - 160;
-    const cover = inK * (1 - outK);
-    css(d, { left: pos + 'px', transform: `skewX(-18deg) scaleX(${cover * 1.15})`, transformOrigin: outK > 0 ? '100% 50%' : '0 50%' });
-  });
-}
-sfx(6.8, 'whoosh', 0.9, { dur: 0.3 });
-
-// ---------- 7.0 – 8.5  LEISTUNGEN (phone, tilted) ----------
-scene({
-  t0: 7.0, t1: 8.5,
-  build(root, s) {
-    s.glow = el('div', 'glow', root); css(s.glow, { width: '1200px', height: '1200px', left: '-60px', top: '600px' });
-    s.ph = makePhone(root);
-    s.cap = makeCaption(root, [[{ w: 'Marketing,', at: 7.05 }], [{ w: 'das', at: 7.5 }, { w: 'Kunden', at: 7.5, cls: 'hl' }, { w: 'bringt', at: 7.5 }]], { y: 250, size: 104 });
-    s.chips = ['Meta Ads', 'Google Ads', 'Social Media'].map((w, i) => { const c = el('div', 'chip', root, ICON.check + w); c.querySelector('svg').style.color = '#1f6fff'; return c; });
-    sfx(7.0, 'impact', 0.6); sfx(7.5, 'pop', 0.7);
-    [8.0, 8.12, 8.24].forEach((x) => sfx(x, 'tick', 0.6));
-  },
-  render(t, s) {
-    const lt = t - 7.0;
-    const k = E.outExpo(prog(lt, 0, 0.5));
-    placePhone(s.ph, { cx: lerp(700, 560, k), cy: 1260, s: 0.78 + lt * 0.03 + beatPulse(t) * 0.012, rx: 8, ry: lerp(-40, -16, k) + lt * 4, rz: lerp(6, 2, k) });
-    setSrc(s.ph.img, clipURL('m_leist', lt * 30 * 1.25));
-    animCaption(s.cap, t, null, 'pop');
-    s.chips.forEach((c, i) => { const a = 8.0 + i * 0.12; const kk = E.outBack(prog(t, a, a + 0.25));
-      show(c, t > a); css(c, { left: [60, 330, 640][i] + 'px', top: [1500, 1600, 1500][i] + 'px', transform: `scale(${kk}) rotate(${[-4, 3, -2][i]}deg)` }); });
-    css(s.glow, { opacity: 0.6 + beatPulse(t) * 0.4 });
-    zoomOut(s, t, 8.5);
-  },
-});
-function zoomOut(s, t, T, d = 0.16) {
-  const k = E.inExpo(prog(t, T - d, T));
-  if (k > 0) { s.root.style.transform = `scale(${1 + k * 2.5})`; s.root.style.filter = `blur(${k * 14}px)`; s.root.style.opacity = 1 - k * 0.6; }
-  else if (!s._enter) { s.root.style.transform = ''; s.root.style.filter = 'none'; s.root.style.opacity = 1; }
-}
-function zoomIn(s, t, T, d = 0.2) {
-  const k = 1 - E.outExpo(prog(t, T, T + d));
-  s._enter = k > 0;
-  if (k > 0) { s.root.style.transform = `scale(${1 - k * 0.45})`; s.root.style.filter = `blur(${k * 14}px)`; s.root.style.opacity = 1; }
-  else { s.root.style.transform = ''; s.root.style.filter = 'none'; }
-}
-sfx(8.36, 'whoosh_in', 0.9, { dur: 0.2 }); flash(8.5, 0.55, 0.2);
-
-// ---------- 8.5 – 10.0  AUTOMATISIERUNG ----------
-scene({
-  t0: 8.5, t1: 10.0,
-  build(root, s) {
-    s.glow = el('div', 'glow', root); css(s.glow, { width: '1200px', height: '1200px', left: '-60px', top: '600px' });
-    s.ph = makePhone(root);
-    s.cap = makeCaption(root, [[{ w: 'Automatisierung', at: 8.5, cls: 'blue' }], [{ w: 'rund', at: 9.0 }, { w: 'um', at: 9.0 }, { w: 'die', at: 9.0 }, { w: 'Uhr', at: 9.0, cls: 'hl' }]], { y: 250, size: 100 });
-    s.badge = el('div', 'pill', root, '<span class="num">24/7</span> Termine · Anfragen · Kalender');
-    s.badge.querySelector('.num').style.cssText += 'width:auto;padding:0 14px;border-radius:23px;';
-    sfx(8.5, 'impact', 0.8); shake(8.5, 18); sfx(9.0, 'pop', 0.7); sfx(9.5, 'tick', 0.7);
-  },
-  render(t, s) {
-    const lt = t - 8.5;
-    zoomIn(s, t, 8.5);
-    placePhone(s.ph, { cx: 520, cy: 1250, s: 0.8 + lt * 0.03 + beatPulse(t) * 0.012, rx: 8, ry: 18 - lt * 5, rz: -2 });
-    setSrc(s.ph.img, clipURL('m_auto', lt * 30 * 1.25));
-    animCaption(s.cap, t, null, 'pop');
-    const kb = E.outBack(prog(t, 9.5, 9.75));
-    show(s.badge, t > 9.5); css(s.badge, { left: '140px', top: '1580px', transform: `scale(${kb})` });
-    css(s.glow, { opacity: 0.6 + beatPulse(t) * 0.4 });
-    whipOut(s, t, 10.0, 1);
-  },
-});
-
-// ---------- 10.0 – 11.0  LEISTUNGEN desktop ----------
-scene({
-  t0: 10.0, t1: 11.2,
-  build(root, s) {
-    s.br = makeBrowser(root);
-    s.cap = makeCaption(root, [[{ w: 'Webseiten,', at: 10.0 }], [{ w: 'die', at: 10.5 }, { w: 'verkaufen', at: 10.5, cls: 'hl' }]], { y: 330, size: 110 });
-    sfx(9.86, 'whoosh', 1.0, { dur: 0.3 }); sfx(10.5, 'pop', 0.7);
-  },
-  render(t, s) {
-    const lt = t - 10.0;
-    whipIn(s, t, 10.0, -1);
-    placeBrowser(s.br, { cx: 540, cy: 1030, s: 1.0 + lt * 0.06 + beatPulse(t) * 0.01, rx: 10, ry: 18 - lt * 12, rz: 2 - lt * 2 });
-    setSrc(s.br.img, clipURL('d_leist', lt * 30 * 1.1));
-    animCaption(s.cap, t, null, 'rise');
-  },
-});
-
-// ---------- 11.0 – 12.0  WEBSITE-CHECK (circle reveal) ----------
-scene({
-  t0: 11.0, t1: 12.0,
-  build(root, s) {
-    s.fill = el('div', 'layer', root); s.fill.style.background = 'radial-gradient(120% 80% at 50% 30%, #0c2851 0%, #071a35 45%, #030914 100%)';
-    s.glow = el('div', 'glow', root); css(s.glow, { width: '1200px', height: '1200px', left: '-60px', top: '600px' });
-    s.ph = makePhone(root);
-    s.cap = makeCaption(root, [[{ w: 'Website-Check', at: 11.05 }], [{ w: 'in', at: 11.05 }, { w: '24', at: 11.05, cls: 'hl' }, { w: 'Stunden', at: 11.05 }]], { y: 250, size: 104 });
-    s.stamp = el('div', '', root, 'GRATIS');
-    css(s.stamp, { position: 'absolute', left: '560px', top: '980px', padding: '10px 34px', font: '900 96px Montserrat', color: '#fff',
-      background: '#e11d48', borderRadius: '18px', boxShadow: '0 0 0 8px #fff, 0 30px 60px -10px rgba(0,0,0,.6)', letterSpacing: '2px' });
-    sfx(10.85, 'swoosh_up', 0.9, { dur: 0.25 }); sfx(11.5, 'stamp', 1.0); shake(11.5, 28, 0.35); flash(11.5, 0.25, 0.15);
-  },
-  render(t, s) {
-    const lt = t - 11.0;
-    const r = E.outCubic(prog(lt, 0, 0.3)) * 1300;
-    s.root.style.clipPath = r < 1299 ? `circle(${r}px at 900px 1700px)` : 'none';
-    placePhone(s.ph, { cx: 540, cy: 1270, s: 0.8 + lt * 0.05, rx: 6, ry: -10 + lt * 10 });
-    setSrc(s.ph.img, clipURL('m_check', 6 + lt * 30 * 1.5));
-    animCaption(s.cap, t, null, 'pop');
-    const ks = prog(t, 11.5, 11.62);
-    show(s.stamp, t > 11.5);
-    css(s.stamp, { transform: `rotate(-12deg) scale(${lerp(3.2, 1, E.outExpo(ks))})`, opacity: clamp(ks * 4) });
-    whipOut(s, t, 12.0, -1, 0.12);
-  },
-});
-
-// ---------- 12.0 – 13.0  24h (browser) ----------
-scene({
-  t0: 12.0, t1: 13.0,
-  build(root, s) {
-    s.br = makeBrowser(root);
-    s.cap = makeCaption(root, [[{ w: '100 %', at: 12.0, cls: 'hl' }, { w: 'kostenlos', at: 12.0 }], [{ w: '& unverbindlich', at: 12.5 }]], { y: 340, size: 100 });
-    sfx(11.88, 'whoosh', 1.0, { dur: 0.25 }); sfx(12.5, 'pop', 0.7);
-  },
-  render(t, s) {
-    const lt = t - 12.0;
-    whipIn(s, t, 12.0, 1, 0.14);
-    placeBrowser(s.br, { cx: 540, cy: 1060, s: 1.08 + lt * 0.08 + beatPulse(t) * 0.01, rx: 12, ry: -16 + lt * 12, rz: -1 });
-    setSrc(s.br.img, clipURL('d_24h', lt * 30 * 1.4));
-    animCaption(s.cap, t, null, 'drop');
-    zoomOut(s, t, 13.0, 0.14);
-  },
-});
-sfx(12.88, 'whoosh_in', 0.8, { dur: 0.15 }); flash(13.0, 0.6, 0.2);
-
-// ---------- 13.0 – 14.0  TEAM full-bleed ----------
-scene({
-  t0: 13.0, t1: 14.0,
-  build(root, s) {
-    s.full = frameImg(root, 'full');
-    s.shade = el('div', 'layer', root); s.shade.style.background = 'linear-gradient(180deg, rgba(4,11,24,.85) 0%, rgba(4,11,24,0) 30%, rgba(4,11,24,0) 70%, rgba(4,11,24,.8) 100%)';
-    s.cap = makeCaption(root, [[{ w: 'Persönlich.', at: 13.0 }, { w: 'Regional.', at: 13.25, cls: 'blue' }]], { y: 250, size: 90 });
-    s.cap2 = makeCaption(root, [[{ w: 'Ihre', at: 13.5 }, { w: 'Ansprechpartner', at: 13.5 }], [{ w: 'am', at: 13.5 }, { w: 'Niederrhein', at: 13.5, cls: 'hl' }]], { y: 1480, size: 76 });
-    sfx(13.0, 'impact', 0.7); sfx(13.25, 'pop', 0.6); sfx(13.5, 'pop', 0.6);
-  },
-  render(t, s) {
-    const lt = t - 13.0;
-    zoomIn(s, t, 13.0, 0.16);
-    css(s.full, { transform: `translateY(${-190}px) scale(${1.12 - lt * 0.06})` });
-    setSrc(s.full, clipURL('m_team', 8 + lt * 30 * 1.3));
-    animCaption(s.cap, t, null, 'pop');
-    animCaption(s.cap2, t, null, 'rise');
-    // exit: drop to black for the breakdown
-    const k = E.inCubic(prog(t, 13.85, 14.0));
-    if (k > 0) { s.root.style.opacity = 1 - k; s.root.style.transform = `scale(${1 - k * 0.1})`; }
-  },
-});
-
-// ---------- 14.0 – 16.0  THE BUTTON (breakdown) ----------
-scene({
-  t0: 14.0, t1: 16.0,
-  build(root, s) {
-    s.cap = makeCaption(root, [[{ w: 'Überzeugt?', at: 14.0 }]], { y: 560, size: 130 });
-    s.sub = makeCaption(root, [[{ w: 'Dann', at: 14.5 }, { w: 'einfach', at: 14.5 }, { w: 'hier', at: 14.5 }, { w: 'tippen', at: 14.5, cls: 'blue' }]], { y: 730, size: 64 });
-    s.rings = [0, 1, 2].map(() => el('div', 'ring', root));
-    s.btn = el('div', 'bigbtn', root, ICON.cal + '<span>Termin buchen</span>');
-    s.shine = el('div', 'shine', s.btn);
-    s.note = makeCaption(root, [[{ w: 'kostenlos · unverbindlich · in 1 Minute', at: 14.75 }]], { y: 1170, size: 40, color: '#b9d2ff' });
-    s.hand = el('div', '', root, '👆'); css(s.hand, { position: 'absolute', fontSize: '190px', lineHeight: 1, fontFamily: 'Noto Color Emoji' });
-    s.tp = tapIndicator(root);
-    s.burst = []; { const R = rng(11); for (let i = 0; i < 18; i++) { const d = el('div', '', root); css(d, { position: 'absolute', width: '14px', height: '44px', borderRadius: '7px', background: i % 2 ? '#5b9bff' : '#fff' }); s.burst.push({ d, a: (i / 18) * Math.PI * 2 + R() * 0.2, v: 380 + R() * 200 }); } }
-    sfx(14.0, 'impact_big', 0.9); shake(14.0, 20); sfx(14.5, 'pop_big', 0.9);
-    sfx(15.0, 'whoosh_soft', 0.6, { dur: 0.35 });
-    sfx(15.5, 'click_big', 1.0); shake(15.5, 22, 0.3); flash(15.5, 0.35, 0.2);
-    sfx(15.5, 'riser', 1.0, { dur: 0.5, from: 15.0 });
-    sfx(15.72, 'whoosh_in', 1.0, { dur: 0.28 });
-  },
-  render(t, s) {
-    const lt = t - 14.0;
-    animCaption(s.cap, t, null, 'drop');
-    animCaption(s.sub, t, null, 'rise');
-    animCaption(s.note, t, null, 'rise');
-    const kb = prog(t, 14.5, 14.85);
-    const press = t > 15.5 ? 1 - 0.1 * Math.sin(Math.min(1, (t - 15.5) / 0.14) * Math.PI) : 1;
-    show(s.btn, t > 14.5);
-    css(s.btn, { transform: `scale(${E.outElastic(kb) * press * (1 + beatPulse(t) * 0.02)})` });
-    const sh = ((t - 14.6) % 1.0) / 0.6; css(s.shine, { left: (-200 + clamp(sh) * 1200) + 'px' });
-    s.rings.forEach((r, i) => { const ph = ((t - 14.6 - i * 0.33) % 1.0 + 1.0) % 1.0; const on = t > 14.6 + i * 0.33;
-      show(r, on); const w = 800 + ph * 260, h = 200 + ph * 260; css(r, { left: (540 - w / 2) + 'px', top: (1010 - h / 2) + 'px', width: w + 'px', height: h + 'px', opacity: (1 - ph) * 0.8 }); });
-    // hand
-    const hk = E.outCubic(prog(t, 15.0, 15.42));
-    const hx = lerp(1100, 610, hk), hy = lerp(1900, 1030, hk);
-    const hp = t > 15.42 && t < 15.62 ? Math.sin(prog(t, 15.42, 15.62) * Math.PI) : 0;
-    show(s.hand, t > 15.0 && t < 15.8);
-    css(s.hand, { left: (hx - 60) + 'px', top: (hy - 20 + hp * 16) + 'px', transform: `rotate(${lerp(-20, -8, hk)}deg) scale(${1 - hp * 0.08})` });
-    animTap(s.tp, t - 15.5, 600, 1020);
-    s.burst.forEach((b) => { const k = prog(t, 15.5, 15.85); show(b.d, k > 0 && k < 1); const r = 120 + E.outCubic(k) * b.v;
-      css(b.d, { left: (540 + Math.cos(b.a) * r * 1.3 - 7) + 'px', top: (1010 + Math.sin(b.a) * r - 22) + 'px', opacity: 1 - k, transform: `rotate(${b.a * 180 / Math.PI + 90}deg) scaleY(${1 - k * 0.6})` }); });
-    // zoom through the button
-    const z = E.inExpo(prog(t, 15.7, 16.0));
-    css(s.root, { transform: `scale(${1 + z * 7})`, transformOrigin: '540px 1010px', filter: z > 0.05 ? `blur(${z * 16}px)` : 'none' });
-  },
-});
-flash(16.0, 1.0, 0.35);
-
-// ---------- 16.0 – 28.0  BOOKING ----------
-const BOOK_TAPS = [ { f: 12, x: 346, y: 796 }, { f: 52, x: 153, y: 712 }, { f: 92, x: 232, y: 620 }, { f: 128, x: 192.5, y: 620 },
-  { f: 160, x: 195, y: 526.9 }, { f: 182, x: 195, y: 578.9 }, { f: 205, x: 195, y: 630.9 }, { f: 226, x: 195, y: 709 }, { f: 262, x: 195, y: 673 } ];
-const TYPE_RUNS = [ { f: 162, n: 14 }, { f: 184, n: 15 }, { f: 207, n: 12 } ];
-const bt = (f) => BOOK_T0 + f / 30;
-const DONE_T = bt(264);
-scene({
-  t0: 16.0, t1: 28.0,
-  build(root, s) {
-    s.glow = el('div', 'glow', root); css(s.glow, { width: '1400px', height: '1400px', left: '-160px', top: '300px' });
-    s.ph = makePhone(root);
-    s.taps = BOOK_TAPS.map(() => tapIndicator(s.ph.taps));
-    s.launchRing = el('div', 'tapring', s.ph.taps);
-    s.steps = [
-      { a: 16.45, b: bt(52), n: '1', txt: 'Thema wählen' },
-      { a: bt(52), b: bt(92), n: '2', txt: 'Wunschtag wählen' },
-      { a: bt(92), b: bt(128), n: '3', txt: 'Uhrzeit wählen' },
-      { a: bt(128), b: bt(226), n: '4', txt: 'Kontaktdaten eingeben' },
-      { a: bt(226), b: bt(262), n: '5', txt: 'Prüfen & absenden' },
-    ].map((st) => ({ ...st, el: el('div', 'pill', root, `<span class="num">${st.n}</span>${st.txt}`) }));
-    s.title = makeCaption(root, [[{ w: 'Termin', at: 16.1 }, { w: 'buchen', at: 16.1, cls: 'hl' }], [{ w: 'in', at: 16.35 }, { w: 'unter', at: 16.35 }, { w: '1', at: 16.35 }, { w: 'Minute', at: 16.35 }]], { y: 1470, size: 84 });
-    s.opts = ['Website-Check', 'Erstgespräch', 'Beratungstermin'].map((w) => { const c = el('div', 'chip', root, ICON.check + w); c.querySelector('svg').style.color = '#16a34a'; return c; });
-    s.optsCap = makeCaption(root, [[{ w: 'Alles', at: 16.9 }, { w: '100 %', at: 16.9, cls: 'hl' }, { w: 'kostenlos', at: 16.9 }]], { y: 346, size: 56 });
-    // success
-    s.okRing = el('div', 'ring', root); s.okRing.style.borderColor = '#22c55e';
-    s.ok = el('div', '', root, ICON.check);
-    css(s.ok, { position: 'absolute', width: '190px', height: '190px', left: '445px', top: '170px', borderRadius: '50%', background: '#22c55e', color: '#fff', display: 'grid', placeItems: 'center', boxShadow: '0 30px 70px -10px rgba(34,197,94,.8)' });
-    s.ok.querySelector('svg').style.cssText = 'width:110px;height:110px';
-    s.okCap = makeCaption(root, [[{ w: 'Termin', at: DONE_T + 0.35 }, { w: 'angefragt!', at: DONE_T + 0.35, cls: 'hl' }]], { y: 400, size: 96 });
-    s.okSub = makeCaption(root, [[{ w: 'Bestätigung kommt per E-Mail', at: DONE_T + 0.65 }]], { y: 530, size: 44, color: '#cfe0ff' });
-    s.conf = []; { const R = rng(3); const cols = ['#1f6fff', '#5b9bff', '#ffffff', '#22c55e', '#facc15', '#93c5fd'];
-      for (let i = 0; i < 90; i++) { const d = el('div', 'confetti', root); d.style.background = cols[i % cols.length];
-        s.conf.push({ d, vx: (R() - 0.5) * 1700, vy: -600 - R() * 1300, rot: R() * 720, vr: (R() - 0.5) * 1400, x0: 540 + (R() - 0.5) * 120, y0: 900 + (R() - 0.5) * 60, sc: 0.7 + R() * 0.9 }); } }
-
-    // sound design for the booking
-    sfx(16.0, 'drop', 1.0); shake(16.0, 18, 0.4);
-    BOOK_TAPS.forEach((tp, i) => sfx(bt(tp.f), 'tap', 0.9));
-    [12, 52, 92, 128, 226].forEach((f) => sfx(bt(f) + 0.12, 'bubble', 0.7));
-    TYPE_RUNS.forEach((r) => { for (let k = 0; k < r.n; k++) sfx(bt(r.f + k), 'key', 0.55, { v: k }); });
-    [bt(52), bt(92), bt(128), bt(226)].forEach((x) => sfx(x - 0.02, 'swish', 0.5));
-    sfx(16.9, 'pop', 0.6); [17.0, 17.12, 17.24].forEach((x) => sfx(x, 'tick', 0.5));
-    sfx(DONE_T, 'success', 1.0); sfx(DONE_T, 'confetti', 0.8); shake(DONE_T, 16, 0.4); flash(DONE_T, 0.3, 0.2);
-    sfx(DONE_T + 0.2, 'pop_big', 0.8); sfx(DONE_T + 0.35, 'pop', 0.7);
-  },
-  render(t, s) {
-    const lt = t - 16.0;
-    const cf = (t - BOOK_T0) * 30;
-    setSrc(s.ph.img, clipURL('m_booking', cf));
-
-    // camera: phone scale + focus point (site CSS px) → keep focus at (540, fy)
-    const keys = [
-      { t: 16.0, z: 1.1, fx: 262, fy: 640, py: 1000 },
-      { t: 16.5, z: 1.1, fx: 262, fy: 640, py: 1000 },
-      { t: 17.0, z: 0.84, fx: 195, fy: 520, py: 1250 },
-      { t: bt(52), z: 0.84, fx: 195, fy: 520, py: 1250 },
-      { t: bt(52) + 0.35, z: 0.95, fx: 195, fy: 520, py: 1150 },
-      { t: bt(150), z: 0.95, fx: 195, fy: 520, py: 1150 },
-      { t: bt(162), z: 1.04, fx: 195, fy: 575, py: 1080 },
-      { t: bt(222), z: 1.04, fx: 195, fy: 575, py: 1080 },
-      { t: bt(234), z: 0.95, fx: 195, fy: 540, py: 1120 },
-      { t: DONE_T, z: 0.95, fx: 195, fy: 540, py: 1120 },
-      { t: DONE_T + 0.35, z: 0.7, fx: 195, fy: 470, py: 1250 },
-      { t: 28.0, z: 0.68, fx: 195, fy: 470, py: 1260 },
-    ];
-    let a = keys[0], b = keys[keys.length - 1];
-    for (let i = 0; i < keys.length - 1; i++) if (t >= keys[i].t && t <= keys[i + 1].t) { a = keys[i]; b = keys[i + 1]; break; }
-    const kk = E.inOutCubic(prog(t, a.t, b.t));
-    const z = lerp(a.z, b.z, kk), fy = lerp(a.fy, b.fy, kk), fx = lerp(a.fx, b.fx, kk), py = lerp(a.py, b.py, kk);
-    const ent = E.outExpo(prog(lt, 0, 0.45));
-    const punch = BOOK_TAPS.reduce((m, tp) => Math.max(m, Math.exp(-Math.max(0, t - bt(tp.f)) * 12) * (t >= bt(tp.f) ? 1 : 0)), 0) * 0.02;
-    const zz = z * lerp(1.25, 1, ent) * (1 + punch);
-    const cy = py - (fy - 422) * SCR * zz;
-    const cx = 540 - (fx - 195) * SCR * zz;
-    const ry = Math.sin(lt * 0.9) * 5, rx = 4 + Math.cos(lt * 0.7) * 2;
-    // exit to end card
-    const ex = E.inExpo(prog(t, 27.75, 28.0));
-    placePhone(s.ph, { cx, cy: cy + ex * 900, s: zz * (1 - ex * 0.3), rx: rx + ex * 40, ry, blur: (1 - ent) * 14 + ex * 10, op: 1 - ex * 0.5 });
-    css(s.glow, { opacity: 0.55 + beatPulse(t) * 0.35 });
-
-    // taps
-    BOOK_TAPS.forEach((tp, i) => animTap(s.taps[i], t - bt(tp.f), tp.x * SCR, tp.y * SCR));
-    // pulsing highlight around the launcher before it is tapped
-    const lr = t < bt(12) ? ((t - 16.0) % 0.5) / 0.5 : 1;
-    show(s.launchRing, t < bt(12) + 0.02);
-    { const R = 28 * SCR * (1 + lr * 0.9); css(s.launchRing, { left: (346 * SCR - R) + 'px', top: (796 * SCR - R) + 'px', width: 2 * R + 'px', height: 2 * R + 'px', opacity: 1 - lr, borderColor: '#5b9bff', borderWidth: '8px' }); }
-
-    // captions
-    animCaption(s.title, t, 16.85, 'pop');
-    animCaption(s.optsCap, t, bt(52) - 0.05, 'pop');
-    s.opts.forEach((c) => { c.style.display = ''; });
-    const ox = rowChips(s.opts, 250, 16);
-    s.opts.forEach((c, i) => { const a0 = 17.0 + i * 0.12; const k = E.outBack(prog(t, a0, a0 + 0.25)); const out = E.inCubic(prog(t, bt(52) - 0.2, bt(52) - 0.05));
-      show(c, t > a0 && t < bt(52) - 0.05); css(c, { left: ox[i] + 'px', top: '252px', transform: `scale(${k * (1 - out)}) rotate(${[-3, 2, -2][i]}deg)` }); });
-    s.steps.forEach((st, i) => {
-      const on = t >= st.a + 0.05 && t < st.b + 0.05;
-      show(st.el, on); if (!on) return;
-      const k = E.outBack(prog(t, st.a + 0.05, st.a + 0.3));
-      const o = E.inCubic(prog(t, st.b - 0.1, st.b + 0.05));
-      const w = st.el.offsetWidth;
-      css(st.el, { left: (540 - w / 2) + 'px', top: '150px', transform: `translateX(${(1 - k) * 300 - o * 300}px) scale(${0.8 + 0.2 * k})`, opacity: clamp(k * 2) * (1 - o) });
-    });
-    // success
-    const ok = prog(t, DONE_T + 0.2, DONE_T + 0.55);
-    show(s.ok, t > DONE_T + 0.2);
-    css(s.ok, { transform: `scale(${E.outElastic(ok)}) rotate(${(1 - E.outCubic(ok)) * -90}deg)` });
-    const rk = prog(t, DONE_T + 0.2, DONE_T + 0.75);
-    show(s.okRing, rk > 0 && rk < 1); { const R = 95 + E.outCubic(rk) * 260; css(s.okRing, { left: (540 - R) + 'px', top: (265 - R) + 'px', width: 2 * R + 'px', height: 2 * R + 'px', opacity: 1 - rk, borderRadius: '50%' }); }
-    animCaption(s.okCap, t, null, 'pop');
-    animCaption(s.okSub, t, null, 'rise');
-    const ck = t - DONE_T;
-    s.conf.forEach((c) => { const on = ck > 0 && ck < 3.2; show(c.d, on); if (!on) return;
-      const x = c.x0 + c.vx * ck * 0.8, y = c.y0 + c.vy * ck + 1400 * ck * ck;
-      css(c.d, { left: x + 'px', top: y + 'px', transform: `rotate(${c.rot + c.vr * ck}deg) scale(${c.sc}) rotateX(${ck * 540}deg)`, opacity: 1 - prog(ck, 2.4, 3.2) }); });
-  },
-});
-
-// ---------- 28.0 – 32.0  END CARD ----------
-scene({
-  t0: 27.75, t1: 32.01,
-  build(root, s) {
-    s.rays = el('div', 'layer', root); s.rays.style.background = 'repeating-conic-gradient(from 0deg at 540px 470px, rgba(91,155,255,.10) 0deg 8deg, rgba(0,0,0,0) 8deg 20deg)';
-    s.logoRing = el('div', 'ring', root); s.logoRing.style.borderRadius = '50%';
-    s.logo = el('div', '', root, ICON.logo(220)); css(s.logo, { position: 'absolute', left: '430px', top: '360px', filter: 'drop-shadow(0 30px 60px rgba(31,111,255,.7))' });
-    s.word = makeCaption(root, [[{ w: 'Westfalia', at: 28.25 }, { w: 'Digital', at: 28.25, cls: 'blue' }]], { y: 620, size: 70 });
-    s.h1 = makeCaption(root, [[{ w: 'Ihr', at: 28.5 }, { w: 'kostenloses', at: 28.5 }], [{ w: 'Erstgespräch', at: 28.75, cls: 'hl' }], [{ w: 'wartet.', at: 29.0 }]], { y: 740, size: 100, gap: 1.14 });
-    s.chips = ['Website-Check', 'Erstgespräch', 'Beratung'].map((w) => { const c = el('div', 'chip', root, ICON.check + w); c.querySelector('svg').style.color = '#16a34a'; return c; });
-    s.rings = [0, 1].map(() => el('div', 'ring', root));
-    s.btn = el('div', 'bigbtn', root, ICON.cal + '<span>Jetzt Termin buchen</span>');
-    css(s.btn, { top: '1350px', width: '860px', height: '170px', marginLeft: '-430px', marginTop: '-85px', fontSize: '60px' });
-    s.btn.querySelector('svg').style.cssText = 'width:66px;height:66px';
-    s.shine = el('div', 'shine', s.btn);
-    s.url = makeCaption(root, [[{ w: 'westfaliadigital.de', at: 29.9 }]], { y: 1485, size: 58 });
-    s.ig = makeCaption(root, [[{ w: '@westfaliadigital', at: 30.1 }]], { y: 1567, size: 38, color: '#9fc0ff' });
-    sfx(27.78, 'whoosh', 1.0, { dur: 0.25 }); sfx(28.05, 'impact_big', 1.0); flash(28.05, 0.8, 0.3); shake(28.05, 24);
-    sfx(28.5, 'pop', 0.6); sfx(28.75, 'pop', 0.7); sfx(29.0, 'pop', 0.6);
-    [29.3, 29.42, 29.54].forEach((x) => sfx(x, 'tick', 0.6));
-    sfx(29.6, 'pop_big', 0.9);
-    sfx(30.0, 'final_hit', 1.0); shake(30.0, 16, 0.4); flash(30.0, 0.25, 0.2);
-  },
-  render(t, s) {
-    const lt = t - 28.05;
-    const bgk = E.outCubic(prog(t, 27.9, 28.3));
-    s.root.style.background = `radial-gradient(90% 60% at 50% 30%, rgba(31,111,255,${0.35 * bgk}) 0%, rgba(4,11,24,0) 70%)`;
-    css(s.rays, { opacity: bgk * (0.8 + beatPulse(t) * 0.2), transform: `rotate(${t * 6}deg) scale(1.6)`, transformOrigin: '540px 470px' });
-    const lk = prog(t, 28.05, 28.45);
-    show(s.logo, t > 28.05);
-    css(s.logo, { transform: `scale(${E.outElastic(lk) * (1 + beatPulse(t) * 0.03)}) rotate(${(1 - E.outCubic(lk)) * 200}deg)` });
-    const rk = prog(t, 28.05, 28.7);
-    show(s.logoRing, rk > 0 && rk < 1); { const R = 110 + E.outCubic(rk) * 300; css(s.logoRing, { left: (540 - R) + 'px', top: (470 - R) + 'px', width: 2 * R + 'px', height: 2 * R + 'px', opacity: 1 - rk }); }
-    animCaption(s.word, t, null, 'rise');
-    animCaption(s.h1, t, null, 'pop');
-    s.chips.forEach((c) => { c.style.display = ''; });
-    const xs = rowChips(s.chips, 1140, 18);
-    s.chips.forEach((c, i) => { const a0 = 29.3 + i * 0.12; const k = E.outBack(prog(t, a0, a0 + 0.25)); show(c, t > a0);
-      css(c, { left: xs[i] + 'px', top: '1150px', transform: `scale(${k})` }); });
-    const bk = prog(t, 29.6, 29.95);
-    show(s.btn, t > 29.6);
-    css(s.btn, { transform: `scale(${E.outElastic(bk) * (1 + beatPulse(t) * 0.025)})` });
-    const sh = ((t - 29.8) % 1.0) / 0.6; css(s.shine, { left: (-200 + clamp(sh) * 1300) + 'px' });
-    s.rings.forEach((r, i) => { const ph = ((t - 29.9 - i * 0.5) % 1.0 + 1.0) % 1.0; show(r, t > 29.9 + i * 0.5);
-      const w = 860 + ph * 220, h = 170 + ph * 220; css(r, { left: (540 - w / 2) + 'px', top: (1350 - h / 2) + 'px', width: w + 'px', height: h + 'px', opacity: (1 - ph) * 0.7 }); });
-    animCaption(s.url, t, null, 'rise');
-    animCaption(s.ig, t, null, 'rise');
-    // gentle float of everything after 30s
-    s.root.style.opacity = E.outCubic(prog(t, 27.85, 28.05));
-  },
-});
-
-// Light leaks on the big transitions
-const leaks = [2.0, 8.5, 13.0, 16.0, 28.05].map((T, i) => { const d = el('div', 'leak', fxRoot); css(d, { width: '1500px', height: '1500px',
-  background: `radial-gradient(closest-side, ${i % 2 ? 'rgba(91,155,255,.85)' : 'rgba(120,190,255,.8)'}, rgba(0,0,0,0))` }); return { d, T }; });
+// End card
+const endLogo = el('div', '', ui, ICON.logo(150)); css(endLogo, { position: 'absolute', left: '465px', top: '500px', filter: 'drop-shadow(0 24px 50px rgba(31,111,255,.55))' });
+const endTitle = title({ t0: 28.35, t1: 99, y: 700, eyebrow: 'Westfalia Digital', lines: ['Ihr kostenloses', '<b>Erstgespräch</b> wartet.'], size: 88 });
+const opts = el('div', 'opts', ui, ['Website-Check', 'Erstgespräch', 'Beratung'].map((w) => `<span>${ICON.tick}${w}</span>`).join(''));
+opts.style.top = '985px';
+const optSpans = [...opts.children];
+const cta = el('div', 'cta', ui, ICON.cal + '<span>Termin buchen</span>'); const ctaShine = el('div', 'shine', cta);
+const url = el('div', '', ui, 'westfaliadigital.de'); css(url, { position: 'absolute', left: 0, right: 0, textAlign: 'center', font: '700 42px Inter', color: '#fff', top: '1340px' });
+const handle = el('div', '', ui, '@westfaliadigital'); css(handle, { position: 'absolute', left: 0, right: 0, textAlign: 'center', font: '500 30px Inter', color: '#8db8ff', top: '1400px' });
 
 // =====================================================================
-//  Frame render
+//  World: phone + browser
 // =====================================================================
-const stage = document.getElementById('stage');
-const flashEl = document.getElementById('flash');
-const grainEl = document.getElementById('grain');
-{ const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const id = g.createImageData(256, 256); const R = rng(99);
-  for (let i = 0; i < id.data.length; i += 4) { const v = R() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
-  g.putImageData(id, 0, 0); grainEl.style.backgroundImage = `url(${c.toDataURL()})`; }
+const browser = makeBrowser(world);
+const phone = makePhone(world);
+const taps = [];
+const BOOK_TAPS = [{ f: 12, x: 346, y: 796 }, { f: 52, x: 153, y: 712 }, { f: 92, x: 232, y: 620 }, { f: 128, x: 192.5, y: 620 },
+  { f: 160, x: 195, y: 526.9 }, { f: 182, x: 195, y: 578.9 }, { f: 205, x: 195, y: 630.9 }, { f: 226, x: 195, y: 709 }, { f: 262, x: 195, y: 673 }];
+BOOK_TAPS.forEach(() => taps.push(tapIndicator(phone.taps)));
+const ctaTap = tapIndicator(ui);
 
+// Phone screen content per segment: [t0, t1, clip, frameAt(t)]
+const SEG = [
+  { t0: 1.6, t1: 4.0, clip: 'c_hero', f: (t) => (t - 1.9) * 30 },
+  { t0: 5.6, t1: 8.0, clip: 'c_leist', f: (t) => (t - 5.7) * 30 },
+  { t0: 8.0, t1: 10.0, clip: 'c_auto', f: (t) => (t - 7.6) * 30 },
+  { t0: 10.0, t1: 12.0, clip: 'c_check', f: (t) => (t - 9.7) * 30 },
+  { t0: 12.0, t1: 14.4, clip: 'c_team', f: (t) => (t - 11.7) * 30 },
+  { t0: 15.3, t1: 32, clip: 'm_booking', f: (t) => (t - BOOK_T0) * 30 },
+];
+const SWAPS = [8.0, 10.0, 12.0]; // in-phone content changes (slide)
+
+// Phone pose keyframes (smooth, calm)
+const P = (t, cx, cy, s, rx, ry) => ({ t, cx, cy, s, rx, ry });
+const PHONE_KEYS = [
+  P(0, 540, 2900, 0.8, 24, -14),
+  P(1.75, 540, 2700, 0.8, 22, -12),
+  P(2.75, 540, 1150, 0.74, 6, -8),
+  P(3.65, 540, 1135, 0.74, 5, -3),
+  P(4.3, -700, 1135, 0.74, 5, 12),     // pushed out left
+  P(4.31, 1780, 1135, 0.74, 5, -12),   // jump (off screen) to the right
+  P(5.65, 1780, 1135, 0.74, 5, -12),
+  P(6.35, 540, 1135, 0.74, 5, -6),
+  P(7.8, 540, 1125, 0.74, 5, 4),
+  P(8.3, 540, 1135, 0.74, 5, -5),
+  P(9.8, 540, 1125, 0.74, 5, 4),
+  P(10.3, 540, 1135, 0.74, 5, -5),
+  P(11.8, 540, 1125, 0.74, 5, 4),
+  P(12.3, 540, 1135, 0.74, 5, -5),
+  P(13.7, 540, 1130, 0.74, 5, 2),
+  P(14.35, 540, 2900, 0.74, 18, 4),    // leaves downward for the CTA
+  P(15.5, 540, 2900, 0.8, 16, 0),
+  P(16.25, 540, 1090, 0.8, 4, 0),      // booking: whole phone, launcher visible
+  P(16.55, 540, 1090, 0.8, 4, 0),
+];
+function phonePose(t) {
+  let a = PHONE_KEYS[0], b = PHONE_KEYS[PHONE_KEYS.length - 1];
+  if (t >= b.t) return { ...b };
+  for (let i = 0; i < PHONE_KEYS.length - 1; i++) if (t >= PHONE_KEYS[i].t && t < PHONE_KEYS[i + 1].t) { a = PHONE_KEYS[i]; b = PHONE_KEYS[i + 1]; break; }
+  const k = E.inOut(prog(t, a.t, b.t));
+  const o = {}; for (const key of ['cx', 'cy', 's', 'rx', 'ry']) o[key] = lerp(a[key], b[key], k);
+  o.v = Math.abs(b.cx - a.cx) / Math.max(0.01, b.t - a.t) * (Math.sin(k * Math.PI));   // horizontal speed for motion blur
+  return o;
+}
+// Booking camera: zoom into the widget, then back out for the confirmation
+const CAM = [
+  { t: 16.55, z: 0.8, fy: 422, py: 1090 },
+  { t: 17.15, z: 1.25, fy: 422, py: 1000 },
+  { t: DONE_T + 0.1, z: 1.25, fy: 422, py: 1000 },
+  { t: DONE_T + 0.75, z: 0.86, fy: 440, py: 1260 },
+  { t: 27.6, z: 0.86, fy: 440, py: 1250 },
+];
+function bookCam(t) {
+  let a = CAM[0], b = CAM[CAM.length - 1];
+  if (t >= b.t) return b;
+  for (let i = 0; i < CAM.length - 1; i++) if (t >= CAM[i].t && t < CAM[i + 1].t) { a = CAM[i]; b = CAM[i + 1]; break; }
+  const k = E.inOut(prog(t, a.t, b.t));
+  return { z: lerp(a.z, b.z, k), fy: lerp(a.fy, b.fy, k), py: lerp(a.py, b.py, k) };
+}
+
+// Sound design (subtle)
+sfx(2.2, 'whoosh', 0.8, { dur: 0.45 });
+sfx(4.0, 'whoosh', 0.9, { dur: 0.35 }); sfx(6.0, 'whoosh', 0.9, { dur: 0.35 });
+SWAPS.forEach((x) => sfx(x, 'swish', 0.8));
+sfx(14.0, 'whoosh_down', 0.8, { dur: 0.35 });
+sfx(14.55, 'soft_pop', 0.7);
+sfx(15.4, 'click', 1.0);
+sfx(15.9, 'whoosh', 0.8, { dur: 0.35 });
+BOOK_TAPS.forEach((tp) => sfx(bt(tp.f), 'tap', 0.9));
+[12, 52, 92, 128, 226].forEach((f) => sfx(bt(f) + 0.13, 'bubble', 0.7));
+[[162, 14], [184, 15], [207, 12]].forEach(([f, n]) => { for (let k = 0; k < n; k++) sfx(bt(f + k), 'key', 0.6, { v: k }); });
+STEPS.slice(1).forEach((s) => sfx(s.a, 'step', 0.6));
+sfx(DONE_T + 0.5, 'success', 1.0);
+sfx(28.02, 'whoosh', 0.7, { dur: 0.4 });
+sfx(28.2, 'logo', 1.0);
+sfx(29.6, 'soft_pop', 0.6);
+
+// =====================================================================
+//  Frame
+// =====================================================================
+const fade = document.getElementById('fade');
 function renderFrame(t) {
   pending.length = 0;
   renderBg(t);
-  for (const s of S) {
-    const vis = t >= s.t0 && t < s.t1;
-    show(s.root, vis);
-    if (vis) s.render(t, s);
+  titles.forEach((d) => renderTitle(d, t));
+  titles[0].box.style.transform = `scale(${1 + t * 0.025})`;
+
+  // ---------- browser (desktop hero, 4–6 s) ----------
+  const bIn = E.inOut(prog(t, 3.65, 4.35)), bOut = E.inOut(prog(t, 5.65, 6.35));
+  const bOn = t > 3.6 && t < 6.4;
+  show(browser.root, bOn);
+  if (bOn) {
+    const cx = lerp(1700, 540, bIn) + lerp(0, -1240, bOut);
+    const lt = t - 4.0;
+    const v = Math.sin(bIn * Math.PI) + Math.sin(bOut * Math.PI);
+    placeBrowser(browser, { cx, cy: 1080, s: 1.0 + lt * 0.015, rx: 7, ry: lerp(-14, 8, prog(t, 3.8, 6.2)), blur: v * 16 });
+    setSrc(browser.img, clipURL('c_dhero', (t - 3.8) * 30));
   }
-  renderSlices(t);
-  // camera shake
-  let sx = 0, sy = 0, sr = 0;
-  for (const sh of SHAKES) { const k = (t - sh.t) / sh.dur; if (k >= 0 && k < 1) { const a = sh.amp * Math.pow(1 - k, 2);
-    const R = rng(Math.floor(t * 1000) + Math.floor(sh.t * 100)); sx += (R() - 0.5) * 2 * a; sy += (R() - 0.5) * 2 * a; sr += (R() - 0.5) * a * 0.04; } }
-  stage.style.transform = `translate(${sx}px, ${sy}px) rotate(${sr}deg)`;
-  // flash
-  let fl = 0; for (const f of FLASHES) { const k = (t - f.t) / f.dur; if (k >= -0.25 && k < 1) fl = Math.max(fl, f.amp * (k < 0 ? (1 + k * 4) : Math.pow(1 - k, 2))); }
-  flashEl.style.opacity = fl;
-  // glitch
-  let g = 0; for (const s of S) for (const [a, b, amp] of s.glitch || []) if (t >= a && t <= b) g = Math.max(g, amp * Math.sin(prog(t, a, b) * Math.PI));
-  if (g > 0.02) {
-    const R = rng(Math.floor(t * 30) * 7 + 3);
-    document.getElementById('glTurb').setAttribute('seed', Math.floor(R() * 1000));
-    document.getElementById('glTurb').setAttribute('baseFrequency', `0.0001 ${0.02 + R() * 0.08}`);
-    document.getElementById('glDisp').setAttribute('scale', (60 + R() * 120) * g);
-    document.getElementById('glR').setAttribute('dx', -22 * g); document.getElementById('glB').setAttribute('dx', 22 * g);
-    stage.style.filter = 'url(#glitch)';
-  } else stage.style.filter = 'none';
-  // light leaks
-  for (const l of leaks) { const k = (t - l.T + 0.25) / 0.7; const on = k > 0 && k < 1; show(l.d, on);
-    if (on) css(l.d, { left: lerp(-900, 700, k) + 'px', top: lerp(-300, 900, k) + 'px', opacity: Math.sin(k * Math.PI) * 0.8 }); }
-  // grain
-  const R = rng(Math.floor(t * 30) + 1); grainEl.style.backgroundPosition = `${Math.floor(R() * 256)}px ${Math.floor(R() * 256)}px`;
+
+  // ---------- phone ----------
+  const pose = phonePose(t);
+  let cx = pose.cx, cy = pose.cy, s = pose.s, rx = pose.rx, ry = pose.ry;
+  if (t >= 16.55) {
+    const c = bookCam(t);
+    s = c.z; cy = c.py - (c.fy - 422) * SCR * c.z; cx = 540; rx = 4 + Math.sin((t - 16.55) * 0.6) * 1.2; ry = Math.sin((t - 16.55) * 0.45) * 2.5;
+  }
+  // end: phone drifts down and fades for the end card
+  const endK = E.inOut(prog(t, 27.7, 28.4));
+  if (endK > 0) { cy += endK * 1500; rx += endK * 14; }
+  const blur = Math.min(18, (pose.v || 0) / 170);
+  placePhone(phone, { cx, cy, s, rx, ry, op: 1, blur: t < 16.55 ? blur : 0 });
+  show(phone.root, t < 28.5);
+  // screen content
+  const seg = SEG.find((g) => t >= g.t0 && t < g.t1) || SEG[0];
+  const sw = SWAPS.find((x) => t >= x - 0.3 && t < x + 0.35);
+  if (sw) {
+    const from = SEG.find((g) => g.t1 === sw), to = SEG.find((g) => g.t0 === sw);
+    setScreen(phone, clipURL(from.clip, from.f(t)), clipURL(to.clip, to.f(t)), prog(t, sw - 0.3, sw + 0.35));
+  } else setScreen(phone, clipURL(seg.clip, seg.f(t)), null, 0);
+
+  // darken the top of the zoomed phone so the step titles stay readable
+  scrim.style.opacity = E.inOut(prog(t, 16.6, 17.1)) * (1 - E.inOut(prog(t, DONE_T + 0.35, DONE_T + 0.8)));
+
+  // taps inside the phone
+  BOOK_TAPS.forEach((tp, i) => animTap(taps[i], t - bt(tp.f), tp.x * SCR, tp.y * SCR));
+
+  // ---------- CTA (14–16 s) and end card ----------
+  const ctaIn = E.outBackSoft(prog(t, 14.45, 15.05));
+  const ctaPress = t > 15.4 ? 1 - 0.05 * Math.sin(Math.min(1, (t - 15.4) / 0.18) * Math.PI) : 1;
+  const ctaOut = E.in(prog(t, 15.55, 15.9));
+  const endCta = E.outBackSoft(prog(t, 29.45, 30.05));
+  if (t < 20) {
+    show(cta, t > 14.45 && t < 15.9);
+    css(cta, { top: '1010px', opacity: clamp(prog(t, 14.45, 14.75)) * (1 - ctaOut), transform: `translateY(${(1 - ctaIn) * 40 - ctaOut * 30}px) scale(${ctaPress * (1 - ctaOut * 0.06)})` });
+    css(ctaShine, { left: (-220 + E.inOut(prog(t, 14.9, 15.35)) * 1000) + 'px' });
+    animTap(ctaTap, t - 15.4, 540 + 90, 1076);
+  } else {
+    show(cta, t > 29.45);
+    css(cta, { top: '1160px', opacity: clamp(prog(t, 29.45, 29.75)), transform: `translateY(${(1 - endCta) * 40}px)` });
+    css(ctaShine, { left: (-220 + E.inOut(prog(t, 30.3, 30.9)) * 1000) + 'px' });
+    animTap(ctaTap, -9, 0, 0);
+  }
+  // success check (centered above the headline)
+  const ck = prog(t, DONE_T + 0.45, DONE_T + 0.85);
+  const ckOut = E.in(prog(t, 27.7, 28.0));
+  show(check, ck > 0 && t < 28.05);
+  css(check, { top: '150px', opacity: clamp(ck * 3) * (1 - ckOut), transform: `scale(${E.outBackSoft(ck) * (1 - ckOut * 0.1)})` });
+  checkPath.style.strokeDashoffset = 1 - E.inOut(prog(t, DONE_T + 0.6, DONE_T + 1.0));
+
+  // end card pieces
+  const lk = E.outBackSoft(prog(t, 28.15, 28.75));
+  show(endLogo, t > 28.15);
+  css(endLogo, { opacity: clamp(prog(t, 28.15, 28.45)), transform: `translateY(${(1 - lk) * 50}px) scale(${0.9 + 0.1 * lk})` });
+  optSpans.forEach((o, i) => { const k = E.out(prog(t, 29.05 + i * 0.12, 29.55 + i * 0.12)); o.style.opacity = k; o.style.transform = `translateY(${(1 - k) * 24}px)`; });
+  show(opts, t > 29);
+  const uk = E.out(prog(t, 29.9, 30.4)), hk = E.out(prog(t, 30.05, 30.55));
+  css(url, { opacity: uk, transform: `translateY(${(1 - uk) * 20}px)` }); show(url, t > 29.9);
+  css(handle, { opacity: hk, transform: `translateY(${(1 - hk) * 20}px)` }); show(handle, t > 30.0);
+
   return Promise.all(pending);
 }
 window.renderFrame = renderFrame;
