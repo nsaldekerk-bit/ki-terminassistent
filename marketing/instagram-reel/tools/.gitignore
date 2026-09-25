@@ -1,0 +1,7 @@
+node_modules/
+clips/
+frames/
+preview/
+sfx.json
+soundtrack.wav
+*.log

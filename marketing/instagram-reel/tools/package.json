@@ -1,0 +1,8 @@
+{
+  "name": "westfalia-reel-tools",
+  "private": true,
+  "description": "Renders the Westfalia Digital Instagram reel",
+  "dependencies": {
+    "playwright": "1.56.1"
+  }
+}
