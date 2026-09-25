@@ -1,32 +1,31 @@
 # Instagram-Reel: westfaliadigital.de
 
-**Video:** `westfalia-digital-reel.mp4`. Format 1080 × 1920 (9:16), 30 fps, 32 s, H.264 und AAC-Stereo. Das entspricht der Instagram-Reel-Spezifikation. Die Datei ist bewusst nicht im Repo, weil `.gitignore` Videodateien ausschließt. Sie wurde im Chat übergeben und lässt sich mit den Schritten unten jederzeit neu erzeugen.
+**Video:** `westfalia-digital-reel.mp4`. Format 1080 × 1920 (9:16), 30 fps, 23 s, H.264 und AAC-Stereo. Das entspricht der Instagram-Reel-Spezifikation. Die Datei ist bewusst nicht im Repo, weil `.gitignore` Videodateien ausschließt. Sie wurde im Chat übergeben und lässt sich mit den Schritten unten jederzeit neu erzeugen.
 **Titelbilder:** [`cover_hook.jpg`](cover_hook.jpg) mit der Hook-Frage und [`cover_endcard.jpg`](cover_endcard.jpg) mit der Endkarte.
 **Posting-Text:** [`caption.md`](caption.md)
 
 ## Ablauf
 
-Die Stilmittel sind ruhig und hochwertig gehalten. Jede Szene hat dieselbe Titelposition, Texte erscheinen über Masken-Reveals, und die Kamera bewegt sich weich. Das Handy bleibt durchgehend im Bild und wechselt die Seiteninhalte per Wischbewegung. Die Übergänge sitzen auf dem Takt (120 BPM).
+Das Video ist schnell geschnitten, bleibt aber aufgeräumt. Alle Schnitte liegen auf einem 124-BPM-Raster, teilweise wird auf jedem Beat geschnitten. Die Effekte: Whip-Pans mit Bewegungsunschärfe, Zoom-Punches im Takt, kurze Lichtblitze, ein Glanz auf den Geräten, ein unscharfer Hintergrund aus der jeweiligen Seite, ein Zoom durch den Button in die Buchung und in der Buchung eine Kamera, die bei jedem Schritt auf eine neue Nahaufnahme springt.
 
-| Zeit | Szene |
+| Beat (Zeit) | Szene |
 |---|---|
-| 0–2 s | Hook: „Ihre Website bringt keine **Anfragen?**“ |
-| 2–4 s | Startseite im Handy: „Ihre Digitalagentur vom Niederrhein.“ |
-| 4–6 s | Startseite Desktop im Browserfenster: „Alles aus einer Hand.“ |
-| 6–8 s | Leistungen Marketing: „Meta Ads, Google Ads & Social Media.“ |
-| 8–10 s | Automatisierung: „Anrufassistent & Terminbuchung.“ |
-| 10–12 s | **Kostenloser Website-Check** (unverbindlich) |
-| 12–14 s | Team: „Feste Ansprechpartner.“ |
-| 14–16 s | „Lernen wir uns kennen?“ und der **„Termin anfragen“-Button** wird angetippt |
-| 16–25 s | **Echte Buchung** mit dem Terminassistenten der Seite: Thema, Wunschtag, Uhrzeit, Kontaktdaten, Prüfen & absenden. Mit Fortschrittsleiste in 5 Schritten. |
-| 25–28 s | Grüner Haken: „Anfrage gesendet. Kostenlos & unverbindlich.“ |
-| 28–32 s | Endkarte: Logo, „Kostenloses Erstgespräch anfragen.“, Website-Check · Erstgespräch · Beratung, „Termin anfragen“, westfaliadigital.de, @westfaliadigital |
+| 0–4 (0–1,9 s) | Hook: „Ihre Website bringt keine **Anfragen?**“ |
+| 4–6 (1,9–2,9 s) | Startseite im Handy: „Ihre Digitalagentur vom Niederrhein.“ |
+| 6–8 (2,9–3,9 s) | Startseite Desktop: „Alles aus einer Hand.“ |
+| 8–12 (3,9–5,8 s) | Ein Schnitt pro Beat: „Marketing.“ · „Webseiten.“ · „Automatisierung.“ · „Alles verbunden.“ (360°-Grafik) |
+| 12–14 (5,8–6,8 s) | **Kostenloser Website-Check** (unverbindlich) |
+| 14–16 (6,8–7,7 s) | Team: „Feste Ansprechpartner.“ |
+| 16–20 (7,7–9,7 s) | „Lernen wir uns kennen?“ und der **„Termin anfragen“-Button** wird angetippt, Zoom in die Buchung |
+| 20–37 (9,7–17,9 s) | **Echte Buchung** mit dem Terminassistenten der Seite. Jeder Tipp liegt auf einem Beat: Thema, Wunschtag, Uhrzeit, Kontaktdaten, Prüfen & absenden. Mit Fortschrittsleiste in 5 Schritten. |
+| 37–40 (17,9–19,4 s) | Grüner Haken: „Anfrage gesendet. Kostenlos & unverbindlich.“ |
+| 40–48 (19,4–23,2 s) | Endkarte: Logo, „Kostenloses Erstgespräch anfragen.“, Website-Check · Erstgespräch · Beratung, „Termin anfragen“, westfaliadigital.de, @westfaliadigital |
 
 Alles im Video stammt von der echten Website (Repo `westfalia-digital`). Die Seite wurde lokal gebaut und im Browser Bild für Bild aufgenommen. Die Buchung ist echt durchgeklickt. Nur das Absenden (`/api/contact`) wurde bei der Aufnahme abgefangen. Deshalb ist keine echte Anfrage und keine E-Mail rausgegangen. „Max Mustermann“ ist ein Platzhalter.
 
-Musik und Sounds sind komplett selbst synthetisiert (`tools/audio.py`): ein Deep-House-Groove mit E-Piano-Akkorden (Am9 – Fmaj9 – C6/9 – G6) und dezenten UI-Sounds. Es gibt also keine Lizenzfragen.
+Musik und Sounds sind komplett selbst synthetisiert (`tools/audio.py`): ein trockener, knackiger Pop/House-Track in C-Dur (C – G – Am – F) mit Klavier-Stabs, funky Bass, Claps, Tamburin und einem kurzen Motiv, dazu dezente UI-Sounds. Es gibt keine Flächen und keine Hall-Teppiche. Lizenzfragen gibt es damit auch nicht.
 
-> Keine Versprechen: Die eingeblendeten Texte beschreiben nur Leistungen. Sie versprechen weder Kunden noch Ergebnisse noch Fristen, und die Buchung wird als unverbindliche Anfrage gezeigt. Die Texte, die in den Aufnahmen auf der Website selbst zu sehen sind, stammen von der Seite und sind unverändert.
+> Keine Versprechen: Die eingeblendeten Texte beschreiben nur Leistungen. Sie versprechen weder Kunden noch Ergebnisse noch Fristen, und die Buchung wird als unverbindliche Anfrage gezeigt. Die Texte, die in den Aufnahmen auf der Website selbst zu sehen sind, stammen von der Seite und sind unverändert. Beim 360°-Schnitt sind die Werbeaussagen der Seite (z. B. „Mehr Kunden“) abgedunkelt.
 
 > Hinweis zur Wortwahl: Im Video heißt es „Terminassistent“, nicht „KI-Terminassistent“. Der Assistent auf westfaliadigital.de ist laut Code regelbasiert, und seine eigene Transparenzzeile sagt „Automatisierter Terminassistent“. Sobald dort der KI-Terminassistent läuft, reicht eine Textänderung in `tools/reel.html`. Danach neu rendern, wie unten beschrieben.
 
@@ -39,8 +38,8 @@ cd marketing/instagram-reel/tools
 npm install                       # Playwright (nutzt das vorinstallierte Chromium)
 pip install -r requirements.txt
 
-node clips.js m_booking c_hero c_dhero c_leist c_auto c_check c_team   # 1. Seite aufnehmen → clips/
-node render.js 0 960 frames       # 2. Reel rendern → frames/*.jpg (+ sfx.json mit allen Sound-Events)
+node clips.js m_booking m_system d_leist c_hero c_dhero c_leist c_auto c_check c_team   # 1. Seite aufnehmen → clips/
+node render.js 0 697 frames       # 2. Reel rendern → frames/*.jpg (+ sfx.json mit allen Sound-Events)
 python3 audio.py                  # 3. Soundtrack → soundtrack.wav
 FF=$(python3 -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())")
 $FF -framerate 30 -i frames/%04d.jpg -i soundtrack.wav -c:v libx264 -profile:v high -preset slow \
