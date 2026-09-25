@@ -1,6 +1,6 @@
 # Instagram-Reel: westfaliadigital.de
 
-**Video:** [`westfalia-digital-reel.mp4`](westfalia-digital-reel.mp4). Format 1080 × 1920 (9:16), 30 fps, 32 s, H.264 und AAC-Stereo. Das entspricht der Instagram-Reel-Spezifikation.
+**Video:** `westfalia-digital-reel.mp4`. Format 1080 × 1920 (9:16), 30 fps, 32 s, H.264 und AAC-Stereo. Das entspricht der Instagram-Reel-Spezifikation. Die Datei ist bewusst nicht im Repo, weil `.gitignore` Videodateien ausschließt. Sie wurde im Chat übergeben und lässt sich mit den Schritten unten jederzeit neu erzeugen.
 **Titelbilder:** [`cover_hook.jpg`](cover_hook.jpg) mit der Hook-Frage und [`cover_endcard.jpg`](cover_endcard.jpg) mit der Endkarte.
 **Posting-Text:** [`caption.md`](caption.md)
 
