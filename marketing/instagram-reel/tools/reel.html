@@ -238,13 +238,13 @@ function animTap(tp, lt, x, y) {
 // =====================================================================
 const TOP = 200;
 title({ t0: -0.35, t1: 1.72, y: 690, eyebrow: 'Westfalia Digital', lines: ['Ihre Website bringt', 'keine <b>Anfragen?</b>'], size: 100 });
-title({ t0: 2.05, t1: 3.75, y: TOP, eyebrow: 'Agentur für Wachstum', lines: ['Wir machen', 'Wachstum <b>planbar.</b>'] });
+title({ t0: 2.05, t1: 3.75, y: TOP, eyebrow: 'westfaliadigital.de', lines: ['Ihre Digitalagentur', 'vom <b>Niederrhein.</b>'] });
 title({ t0: 4.05, t1: 5.75, y: TOP, eyebrow: 'Marketing · Webseiten · Automatisierung', lines: ['Alles aus', '<b>einer Hand.</b>'] });
-title({ t0: 6.05, t1: 7.75, y: TOP, eyebrow: 'Marketing', lines: ['Mehr Kunden –', '<b>planbar & messbar.</b>'] });
-title({ t0: 8.05, t1: 9.75, y: TOP, eyebrow: 'Automatisierung', lines: ['Keine Anfrage', 'geht <b>verloren.</b>'] });
-title({ t0: 10.05, t1: 11.75, y: TOP, eyebrow: '100 % kostenlos · in 24 Stunden', lines: ['Kostenloser', '<b>Website-Check.</b>'] });
-title({ t0: 12.05, t1: 13.75, y: TOP, eyebrow: 'Persönlich & regional', lines: ['Ihre Ansprechpartner', 'am <b>Niederrhein.</b>'] });
-title({ t0: 14.05, t1: 15.55, y: 690, eyebrow: 'Kostenlos & unverbindlich', lines: ['Bereit für', 'mehr <b>Anfragen?</b>'], size: 96 });
+title({ t0: 6.05, t1: 7.75, y: TOP, eyebrow: 'Marketing', lines: ['Meta Ads, Google Ads', '& <b>Social Media.</b>'] });
+title({ t0: 8.05, t1: 9.75, y: TOP, eyebrow: 'Automatisierung', lines: ['Anrufassistent &', '<b>Terminbuchung.</b>'] });
+title({ t0: 10.05, t1: 11.75, y: TOP, eyebrow: 'Unverbindlich', lines: ['Kostenloser', '<b>Website-Check.</b>'] });
+title({ t0: 12.05, t1: 13.75, y: TOP, eyebrow: 'Persönlich & regional', lines: ['Feste', '<b>Ansprechpartner.</b>'] });
+title({ t0: 14.05, t1: 15.55, y: 690, eyebrow: 'Kostenlos & unverbindlich', lines: ['Lernen wir', 'uns <b>kennen?</b>'], size: 96 });
 
 // Booking: constant eyebrow + progress, headline per step
 const STEPS = [
@@ -255,21 +255,21 @@ const STEPS = [
   { a: bt(226) + 0.12, b: DONE_T - 0.1, h: 'Prüfen & absenden' },
 ];
 const fills = STEPS.map((s) => [s.a - 0.05]);
-const bookHead = title({ t0: 16.15, t1: DONE_T - 0.1, y: 150, eyebrow: 'Termin buchen · in unter 1 Minute', lines: [], progress: fills });
+const bookHead = title({ t0: 16.15, t1: DONE_T - 0.1, y: 150, eyebrow: 'Terminanfrage · kostenlos & unverbindlich', lines: [], progress: fills });
 const stepTitles = STEPS.map((s) => title({ t0: s.a, t1: s.b - 0.05, y: 238, lines: [s.h], size: 64, sub: s.sub }));
 
 // Success
-const okTitle = title({ t0: DONE_T + 0.55, t1: 27.7, y: 300, lines: ['Termin <b>angefragt.</b>'], size: 72, sub: 'Die Bestätigung kommt per E-Mail.' });
+const okTitle = title({ t0: DONE_T + 0.55, t1: 27.7, y: 300, lines: ['Anfrage <b>gesendet.</b>'], size: 72, sub: 'Kostenlos & unverbindlich.' });
 const check = el('div', 'check', ui, '<svg viewBox="0 0 120 120" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M36 61 L53 78 L85 44" pathLength="1" stroke-dasharray="1" /></svg>');
 const checkPath = check.querySelector('path');
 
 // End card
 const endLogo = el('div', '', ui, ICON.logo(150)); css(endLogo, { position: 'absolute', left: '465px', top: '500px', filter: 'drop-shadow(0 24px 50px rgba(31,111,255,.55))' });
-const endTitle = title({ t0: 28.35, t1: 99, y: 700, eyebrow: 'Westfalia Digital', lines: ['Ihr kostenloses', '<b>Erstgespräch</b> wartet.'], size: 88 });
+const endTitle = title({ t0: 28.35, t1: 99, y: 700, eyebrow: 'Westfalia Digital', lines: ['Kostenloses', '<b>Erstgespräch</b> anfragen.'], size: 88 });
 const opts = el('div', 'opts', ui, ['Website-Check', 'Erstgespräch', 'Beratung'].map((w) => `<span>${ICON.tick}${w}</span>`).join(''));
 opts.style.top = '985px';
 const optSpans = [...opts.children];
-const cta = el('div', 'cta', ui, ICON.cal + '<span>Termin buchen</span>'); const ctaShine = el('div', 'shine', cta);
+const cta = el('div', 'cta', ui, ICON.cal + '<span>Termin anfragen</span>'); const ctaShine = el('div', 'shine', cta);
 const url = el('div', '', ui, 'westfaliadigital.de'); css(url, { position: 'absolute', left: 0, right: 0, textAlign: 'center', font: '700 42px Inter', color: '#fff', top: '1340px' });
 const handle = el('div', '', ui, '@westfaliadigital'); css(handle, { position: 'absolute', left: 0, right: 0, textAlign: 'center', font: '500 30px Inter', color: '#8db8ff', top: '1400px' });
 

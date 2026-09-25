@@ -11,20 +11,22 @@ Die Stilmittel sind ruhig und hochwertig gehalten. Jede Szene hat dieselbe Titel
 | Zeit | Szene |
 |---|---|
 | 0–2 s | Hook: „Ihre Website bringt keine **Anfragen?**“ |
-| 2–4 s | Startseite im Handy: „Wir machen Wachstum planbar.“ |
+| 2–4 s | Startseite im Handy: „Ihre Digitalagentur vom Niederrhein.“ |
 | 4–6 s | Startseite Desktop im Browserfenster: „Alles aus einer Hand.“ |
-| 6–8 s | Leistungen Marketing: „Mehr Kunden – planbar & messbar.“ |
-| 8–10 s | Automatisierung: „Keine Anfrage geht verloren.“ |
-| 10–12 s | **Kostenloser Website-Check** (100 % kostenlos, in 24 Stunden) |
-| 12–14 s | Team: „Ihre Ansprechpartner am Niederrhein.“ |
-| 14–16 s | „Bereit für mehr Anfragen?“ und der **„Termin buchen“-Button** wird angetippt |
+| 6–8 s | Leistungen Marketing: „Meta Ads, Google Ads & Social Media.“ |
+| 8–10 s | Automatisierung: „Anrufassistent & Terminbuchung.“ |
+| 10–12 s | **Kostenloser Website-Check** (unverbindlich) |
+| 12–14 s | Team: „Feste Ansprechpartner.“ |
+| 14–16 s | „Lernen wir uns kennen?“ und der **„Termin anfragen“-Button** wird angetippt |
 | 16–25 s | **Echte Buchung** mit dem Terminassistenten der Seite: Thema, Wunschtag, Uhrzeit, Kontaktdaten, Prüfen & absenden. Mit Fortschrittsleiste in 5 Schritten. |
-| 25–28 s | Grüner Haken: „Termin angefragt. Die Bestätigung kommt per E-Mail.“ |
-| 28–32 s | Endkarte: Logo, „Ihr kostenloses Erstgespräch wartet.“, Website-Check · Erstgespräch · Beratung, „Termin buchen“, westfaliadigital.de, @westfaliadigital |
+| 25–28 s | Grüner Haken: „Anfrage gesendet. Kostenlos & unverbindlich.“ |
+| 28–32 s | Endkarte: Logo, „Kostenloses Erstgespräch anfragen.“, Website-Check · Erstgespräch · Beratung, „Termin anfragen“, westfaliadigital.de, @westfaliadigital |
 
 Alles im Video stammt von der echten Website (Repo `westfalia-digital`). Die Seite wurde lokal gebaut und im Browser Bild für Bild aufgenommen. Die Buchung ist echt durchgeklickt. Nur das Absenden (`/api/contact`) wurde bei der Aufnahme abgefangen. Deshalb ist keine echte Anfrage und keine E-Mail rausgegangen. „Max Mustermann“ ist ein Platzhalter.
 
 Musik und Sounds sind komplett selbst synthetisiert (`tools/audio.py`): ein Deep-House-Groove mit E-Piano-Akkorden (Am9 – Fmaj9 – C6/9 – G6) und dezenten UI-Sounds. Es gibt also keine Lizenzfragen.
+
+> Keine Versprechen: Die eingeblendeten Texte beschreiben nur Leistungen. Sie versprechen weder Kunden noch Ergebnisse noch Fristen, und die Buchung wird als unverbindliche Anfrage gezeigt. Die Texte, die in den Aufnahmen auf der Website selbst zu sehen sind, stammen von der Seite und sind unverändert.
 
 > Hinweis zur Wortwahl: Im Video heißt es „Terminassistent“, nicht „KI-Terminassistent“. Der Assistent auf westfaliadigital.de ist laut Code regelbasiert, und seine eigene Transparenzzeile sagt „Automatisierter Terminassistent“. Sobald dort der KI-Terminassistent läuft, reicht eine Textänderung in `tools/reel.html`. Danach neu rendern, wie unten beschrieben.
 
