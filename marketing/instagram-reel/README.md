@@ -23,7 +23,9 @@ Das Video ist schnell geschnitten, bleibt aber aufgeräumt. Alle Schnitte liegen
 
 Alles im Video stammt von der echten Website (Repo `westfalia-digital`). Die Seite wurde lokal gebaut und im Browser Bild für Bild aufgenommen. Die Buchung ist echt durchgeklickt. Nur das Absenden (`/api/contact`) wurde bei der Aufnahme abgefangen. Deshalb ist keine echte Anfrage und keine E-Mail rausgegangen. „Max Mustermann“ ist ein Platzhalter.
 
-Musik und Sounds sind komplett selbst synthetisiert (`tools/audio.py`). Die Musik ist eine seriöse, zurückhaltende Untermalung in d-Moll, die am Ende nach F-Dur auflöst: ein tiefer Puls, ein gedämpftes Pluck-Ostinato, tiefe Streicher, einzelne weiche Klaviertöne und ein leiser Kick. Soundeffekte gibt es nur an wenigen Stellen (17 insgesamt): Whooshes an den Hauptübergängen, der Klick auf den Button, leise Tipp-Geräusche in der Buchung und ein kurzer Bestätigungston. Lizenzfragen gibt es keine.
+Musik und Sounds sind komplett selbst synthetisiert (`tools/audio.py`). Die Musik ist eine seriöse, zurückhaltende Untermalung in d-Moll, die am Ende nach F-Dur auflöst: ein tiefer Puls, ein gedämpftes Pluck-Ostinato, tiefe Streicher, einzelne weiche Klaviertöne und ein leiser Kick. Die Soundeffekte sind dezent gehalten: Whooshes an den Übergängen, ein Klick bei jedem schnellen Schnitt und jedem Button-Druck, kurze Bestätigungstöne, nachdem der Assistent eine Auswahl angenommen hat, sehr leises Tippen und ein Bestätigungston am Ende. Lizenzfragen gibt es keine.
+
+Mit `ONLY_SFX=1 python3 audio.py` entsteht dieselbe Tonspur ohne Musik. Die Effekte bleiben dabei gleich laut. So lässt sich auch ein Song aus der Instagram-Musikbibliothek darunterlegen.
 
 > Keine Versprechen: Die eingeblendeten Texte beschreiben nur Leistungen. Sie versprechen weder Kunden noch Ergebnisse noch Fristen, und die Buchung wird als unverbindliche Anfrage gezeigt. Die Texte, die in den Aufnahmen auf der Website selbst zu sehen sind, stammen von der Seite und sind unverändert. Beim 360°-Schnitt sind die Werbeaussagen der Seite (z. B. „Mehr Kunden“) abgedunkelt.
 

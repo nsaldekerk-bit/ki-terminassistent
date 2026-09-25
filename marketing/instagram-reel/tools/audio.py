@@ -235,6 +235,35 @@ def click(strong=False):
     return x
 
 
+def press():
+    """UI button press: a soft 'thock' with a small click on top."""
+    t = ta(0.09)
+    body = np.sin(2 * np.pi * np.cumsum(210 + 90 * np.exp(-t / 0.008)) / SR) * np.exp(-t / 0.022)
+    tick_ = bp(rng.standard_normal(len(t)), 2500, 9000) * np.exp(-t / 0.0018) * 0.6
+    return body + tick_
+
+
+def blip():
+    """Short UI confirmation: two quick soft notes (A5 → D6)."""
+    out = np.zeros(int(0.35 * SR))
+    for i, m in enumerate([81, 86]):
+        t = ta(0.25)
+        x = np.sin(2 * np.pi * midi(m) * t) * np.exp(-t / 0.06) * np.clip(t / 0.003, 0, 1)
+        put(out, x, i * 0.065, 0.7 if i else 0.55)
+    return out
+
+
+def pop():
+    t = ta(0.12)
+    return np.sin(2 * np.pi * np.cumsum(520 + 380 * np.exp(-t / 0.018)) / SR) * np.exp(-t / 0.035)
+
+
+def key_tick(v):
+    r = np.random.default_rng(700 + int(v))
+    t = ta(0.03)
+    return bp(r.standard_normal(len(t)), 2200 + r.uniform(-300, 300), 8000) * np.exp(-t / 0.004)
+
+
 def confirm():
     """Short, soft two-note confirmation (F → C), no long tail."""
     out = np.zeros(int(0.9 * SR))
@@ -245,7 +274,7 @@ def confirm():
     return out
 
 
-LEVEL = {'whoosh': -18, 'whip': -18, 'click': -15, 'tap': -22, 'success': -14, 'logo': -13}
+LEVEL = {'whoosh': -14, 'whip': -14, 'click': -9, 'tap': -10, 'press': -9, 'confirm': -13, 'pop': -16, 'key': -21, 'success': -9, 'logo': -13}
 events = json.load(open(os.environ.get('SFX', 'sfx.json')))['sfx']
 for e in events:
     typ, t, g = e['type'], e['t'], e.get('gain', 1.0)
@@ -256,8 +285,14 @@ for e in events:
         put(sfxbuf, norm(whoosh(0.12, 600, 4500), lvl), t - 0.12)
     elif typ == 'click':
         put(sfxbuf, norm(click(True), lvl), t)
-    elif typ == 'tap':
-        put(sfxbuf, norm(click(False), lvl), t)
+    elif typ in ('tap', 'press'):
+        put(sfxbuf, norm(press(), lvl), t)
+    elif typ == 'confirm':
+        put(sfxbuf, norm(blip(), lvl), t)
+    elif typ == 'pop':
+        put(sfxbuf, norm(pop(), lvl), t)
+    elif typ == 'key':
+        put(sfxbuf, norm(key_tick(e.get('v', 0)), lvl + rng.uniform(-2, 1)), t, pan=rng.uniform(-0.15, 0.15))
     elif typ == 'success':
         put(sfxbuf, norm(confirm(), lvl), t)
     elif typ == 'logo':
@@ -265,10 +300,13 @@ for e in events:
     else:
         print('unused sfx', typ)
 
-mix = music + sfxbuf
-mix = pb.Pedalboard([pb.HighpassFilter(cutoff_frequency_hz=28), pb.Compressor(threshold_db=-16, ratio=1.8, attack_ms=20, release_ms=150)])(mix.astype(np.float32), SR)
+bus = pb.Pedalboard([pb.HighpassFilter(cutoff_frequency_hz=28), pb.Compressor(threshold_db=-16, ratio=1.8, attack_ms=20, release_ms=150)])
 meter = pyln.Meter(SR)
-mix = mix * 10 ** ((-17.0 - meter.integrated_loudness(mix.T)) / 20)
+full = bus((music + sfxbuf).astype(np.float32), SR)
+gain = 10 ** ((-17.0 - meter.integrated_loudness(full.T)) / 20)
+# ONLY_SFX=1 renders the same effects at the same level without the music,
+# e.g. to lay a track from Instagram's own music library underneath.
+mix = (bus(sfxbuf.astype(np.float32), SR) if os.environ.get('ONLY_SFX') else full) * gain
 mix = pb.Pedalboard([pb.Limiter(threshold_db=-2.0, release_ms=80), pb.Gain(gain_db=-1.2)])(mix.astype(np.float32), SR)
 f = int(0.01 * SR); mix[:, :f] *= np.linspace(0, 1, f)
 tail = int(0.4 * SR); mix[:, -tail:] *= np.linspace(1, 0, tail) ** 2

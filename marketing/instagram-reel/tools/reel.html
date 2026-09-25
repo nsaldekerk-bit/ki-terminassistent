@@ -331,16 +331,22 @@ const ctaTap = tapIndicator(ui);
 // =====================================================================
 //  Sound events
 // =====================================================================
-// Restrained sound design: only the main transitions, the button, the taps,
-// the confirmation and the logo. The flashes stay visual only.
+// Sound design: transitions, button presses and short confirmations.
+// Kept subtle; the flashes are visual only.
 sfx(b(4) - 0.05, 'whoosh', 0.7, { dur: 0.3 });
 [6, 12, 14].forEach((x) => sfx(b(x), 'whip', 0.7));
-[8, 9, 10, 11].forEach((x) => FLASH.push([b(x), 0.22]));
-sfx(b(19), 'click', 1.0); FLASH.push([b(19), 0.18]);
+[8, 9, 10, 11].forEach((x) => { sfx(b(x), 'press', 0.6); FLASH.push([b(x), 0.22]); });
+sfx(b(16.5), 'pop', 0.7);
+sfx(b(19), 'click', 1.0); sfx(b(19) + 0.14, 'confirm', 0.7); FLASH.push([b(19), 0.18]);
 sfx(b(19.6), 'whoosh', 0.8, { dur: 0.25 }); FLASH.push([b(19.95), 0.35]);
-BOOK_TAPS.forEach((tp) => sfx(b(tapBeat(tp.f)), 'tap', 0.8));
+BOOK_TAPS.forEach((tp) => sfx(b(tapBeat(tp.f)), 'tap', 0.9));
+// the assistant answers after topic, day, time and "Weiter" → short confirmation
+[52, 92, 128, 226].forEach((f) => sfx(b(tapBeat(f)) + 0.16, 'confirm', 0.6));
+// typing: every second keystroke, very quiet
+[[162, 14], [184, 15], [207, 12]].forEach(([f, n]) => { for (let k = 0; k < n; k += 2) { const fr = f + k; let bt_ = 0; for (let i = 0; i < MAP.length - 1; i++) if (fr >= MAP[i][0] && fr <= MAP[i + 1][0]) bt_ = lerp(MAP[i][1], MAP[i + 1][1], (fr - MAP[i][0]) / (MAP[i + 1][0] - MAP[i][0])); sfx(b(bt_), 'key', 0.6, { v: k }); } });
 sfx(DONE + 0.15, 'success', 1.0); FLASH.push([DONE + 0.15, 0.15]);
 sfx(E0, 'logo', 1.0); FLASH.push([E0, 0.3]);
+sfx(E0 + b(3), 'pop', 0.6);
 
 // =====================================================================
 //  Frame
