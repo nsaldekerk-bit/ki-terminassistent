@@ -42,8 +42,9 @@ yarn-error.log*
 # vercel
 .vercel
 
-# claude code local config
-.claude/
+# claude code local config – but keep shared project skills in the repo
+.claude/*
+!.claude/skills/
 
 # typescript
 *.tsbuildinfo
